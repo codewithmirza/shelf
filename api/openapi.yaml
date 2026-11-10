@@ -1,0 +1,208 @@
+openapi: 3.1.0
+info:
+  title: Shelf HTTP API
+  version: 0.1.0
+  description: >
+    Gate 5 · Interface contract, machine-readable part. Source of truth for shapes:
+    docs/engineering/05-interface-contract.md. The MCP surface is described there, not here.
+  license: { name: MIT, identifier: MIT }
+servers:
+  - url: https://shelf.example.workers.dev
+    description: Sandbox environment (replace with PUBLIC_ORIGIN)
+tags:
+  - { name: cart-api, description: PayPal Cart API v1 contract, per store }
+  - { name: seller, description: Seller app API }
+  - { name: pay, description: Pay page API }
+  - { name: webhooks, description: PayPal webhooks }
+  - { name: try, description: Try page }
+components:
+  securitySchemes:
+    storeKey: { type: http, scheme: bearer, description: Store key from the Seller app }
+    session: { type: apiKey, in: cookie, name: shelf_session }
+    payToken: { type: apiKey, in: query, name: t, description: HMAC-signed, 30-minute token bound to one order }
+  schemas:
+    Money:
+      type: object
+      required: [currency_code, value]
+      properties:
+        currency_code: { type: string, const: USD }
+        value: { type: string, pattern: '^\d+\.\d{2}$', examples: ["32.00"] }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties: { code: { type: string }, message: { type: string } }
+    CartItemInput:
+      type: object
+      required: [variant_id, quantity]
+      properties:
+        variant_id: { type: string }
+        quantity: { type: integer, minimum: 1, maximum: 10 }
+    CartInput:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/CartItemInput' } }
+        shipping_address:
+          type: object
+          properties:
+            address_line_1: { type: string }
+            admin_area_2: { type: string }
+            admin_area_1: { type: string }
+            postal_code: { type: string }
+            country_code: { type: string, const: US }
+    ValidationIssue:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, enum: [OUT_OF_STOCK, PRICE_CHANGED, UNPUBLISHED, OTHER_STORE, QUANTITY_LIMIT] }
+        variant_id: { type: string }
+        message: { type: string }
+    CartLine:
+      type: object
+      required: [variant_id, title, options, quantity, unit_price, line_total]
+      properties:
+        variant_id: { type: string }
+        title: { type: string }
+        options: { type: object, additionalProperties: { type: string } }
+        quantity: { type: integer }
+        unit_price: { $ref: '#/components/schemas/Money' }
+        line_total: { $ref: '#/components/schemas/Money' }
+        issue: { type: string }
+    CartApiCart:
+      type: object
+      required: [id, version, lines, subtotal, shipping, total, validation_issues, state]
+      properties:
+        id: { type: string, pattern: '^CART-[A-Z0-9]+$' }
+        version: { type: integer }
+        lines: { type: array, items: { $ref: '#/components/schemas/CartLine' } }
+        subtotal: { $ref: '#/components/schemas/Money' }
+        shipping: { $ref: '#/components/schemas/Money' }
+        total: { $ref: '#/components/schemas/Money' }
+        validation_issues: { type: array, items: { $ref: '#/components/schemas/ValidationIssue' } }
+        state: { type: string, enum: [ready, incomplete, checking_out, completed, expired] }
+        paypal_order_id: { type: string }
+        approve_url: { type: string, format: uri }
+        capture_id: { type: string }
+  responses:
+    Error:
+      description: Error, see api/error-codes.yaml
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+paths:
+  /api/stores/{slug}/merchant-cart:
+    parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [cart-api]
+      summary: Create a cart (SYS-CART-01)
+      security: [{ storeKey: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CartInput' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/CartApiCart' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/stores/{slug}/merchant-cart/{id}:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: id, in: path, required: true, schema: { type: string, pattern: '^CART-[A-Z0-9]+$' } }
+    get:
+      tags: [cart-api]
+      summary: Read a cart
+      security: [{ storeKey: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CartApiCart' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+    put:
+      tags: [cart-api]
+      summary: Replace a cart; full replacement, not a merge (SYS-CART-02)
+      security: [{ storeKey: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CartInput' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/CartApiCart' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/stores/{slug}/merchant-cart/{id}/checkout:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+      - { name: id, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [cart-api]
+      summary: Capture an approved cart
+      security: [{ storeKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [paypal_order_id], properties: { paypal_order_id: { type: string } } } } }
+      responses:
+        '200': { description: Completed, content: { application/json: { schema: { $ref: '#/components/schemas/CartApiCart' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /api/pay/{order}:
+    parameters: [{ name: order, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [pay]
+      summary: Data for the Pay page
+      security: [{ payToken: [] }]
+      responses:
+        '200': { description: OK }
+        '410': { $ref: '#/components/responses/Error' }
+  /api/pay/{order}/capture:
+    parameters: [{ name: order, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [pay]
+      summary: Capture after PayPal approval (idempotent)
+      security: [{ payToken: [] }]
+      responses:
+        '200': { description: OK }
+        '422': { $ref: '#/components/responses/Error' }
+  /api/webhooks/paypal:
+    post:
+      tags: [webhooks]
+      summary: PayPal webhook; verified with verify-webhook-signature before any change
+      responses:
+        '200': { description: Accepted or duplicate }
+        '400': { description: Not verified }
+  /api/seller/photos:
+    post:
+      tags: [seller]
+      summary: Upload 1 to 10 photos
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { type: object, properties: { files: { type: array, maxItems: 10, items: { type: string, format: binary } } } }
+      responses:
+        '202': { description: Queued }
+        '415': { $ref: '#/components/responses/Error' }
+    get:
+      tags: [seller]
+      summary: Photos and their state
+      security: [{ session: [] }]
+      responses: { '200': { description: OK } }
+  /api/seller/products/{id}/publish:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [seller]
+      summary: Publish; refused until every variant has a confirmed price (INV-03)
+      security: [{ session: [] }]
+      responses:
+        '200': { description: Published }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/seller/refunds/{id}/approve:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    post:
+      tags: [seller]
+      summary: Approve a refund request; the only path to a refund (INV-05)
+      security: [{ session: [] }]
+      responses:
+        '200': { description: Approved, then Done or Failed }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/try/chat:
+    post:
+      tags: [try]
+      summary: Try page chat with Gemini and the Shelf tools
+      responses:
+        '200': { description: OK }
+        '429': { $ref: '#/components/responses/Error' }

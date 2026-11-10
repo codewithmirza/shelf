@@ -1,0 +1,313 @@
+# Gate 7 · Implementation contract · the task graph (docs/engineering/07-implementation-contract.md).
+# Machine-readable. IDs are never renumbered; a new task takes the next free number.
+# An agent picks only a task whose depends_on are all done (AGENTS.md, "How you work on a task").
+version: 1
+contract: docs/engineering/07-implementation-contract.md
+deadline: '2026-11-12T22:00:00+05:30'   # target; the hard deadline is 2026-11-13T01:30:00+05:30
+roles:
+  - Payments    # server, PayPal, MCP, Cart API (founder A)
+  - Frontend    # Seller app, Storefront, Try page, design system (founder B)
+  - Lead        # submission, video, README
+milestones:
+  - { id: M0, title: Foundations and spikes, ends: '2026-11-11T09:00:00+05:30' }
+  - { id: M1, title: Buyer path end to end, ends: '2026-11-11T20:00:00+05:30', completes_flows: [FL-BUY-01, FL-BUY-02, FL-BUY-03, FL-BUY-04, FL-BUY-05] }
+  - { id: M2, title: Seller app, ends: '2026-11-12T02:00:00+05:30', completes_flows: [FL-SEL-01, FL-SEL-02, FL-SEL-03, FL-SEL-04, FL-SEL-05] }
+  - { id: M3, title: Agents, judges and seed, ends: '2026-11-12T13:00:00+05:30', completes_flows: [FL-AGT-01, FL-JDG-01] }
+  - { id: M4, title: Ship, ends: '2026-11-12T22:00:00+05:30', completes_flows: [] }
+tasks:
+  - id: T-01
+    title: Scaffold the repository and the one-Worker entry (SPK-01)
+    milestone: M0
+    owner_role: Payments
+    depends_on: []
+    effort_hours: 2
+    touches: ['package.json', 'pnpm-lock.yaml', 'wrangler.jsonc', 'open-next.config.ts', 'next.config.ts', 'tsconfig.json', 'src/worker.ts', 'src/app/layout.tsx', 'src/app/(marketing)/page.tsx', 'vitest.config.ts', 'LICENSE', '.gitignore']
+    reads_first: [adr/001-one-worker.md, '03-architecture-contract.md: Stack, Code layout']
+    tests: []
+    spikes: [SPK-01]
+    done: '`pnpm deploy` succeeds under 10 MiB gzip; `/` renders; `/mcp` answers MCP initialize from MCP Inspector; evidence/SPK-01.md written.'
+  - id: T-02
+    title: Add the D1 migration, the Drizzle schema and the seed loader
+    milestone: M0
+    owner_role: Payments
+    depends_on: [T-01]
+    effort_hours: 1
+    touches: ['db/migrations/0001_initial.sql', 'db/seed.sql', 'src/server/db/schema.ts', 'src/server/db/client.ts', 'drizzle.config.ts']
+    reads_first: [04-data-contract.md]
+    tests: []
+    done: Migration applies locally and remotely; `drizzle-kit check` passes; seed loads two demo stores.
+  - id: T-03
+    title: Build the PayPal REST client (OAuth, orders, capture, refund, tracking, webhook verify) (SPK-05)
+    milestone: M0
+    owner_role: Payments
+    depends_on: [T-01]
+    effort_hours: 2
+    touches: ['src/server/paypal/client.ts', 'src/server/paypal/orders.ts', 'src/server/paypal/refunds.ts', 'src/server/paypal/webhooks.ts', 'src/server/paypal/errors.ts', 'tests/contract/paypal.test.ts']
+    reads_first: [adr/004-paypal-rest.md, '05-interface-contract.md: PayPal webhooks, Error codes']
+    tests: [TC-PAY-01]
+    spikes: [SPK-05]
+    done: A contract test creates, approves (sandbox buyer through the approve link) and captures one order; webhook verify answers SUCCESS for a simulator event.
+  - id: T-04
+    title: Build the Vertex client through AI Gateway and the extraction schema (SPK-04)
+    milestone: M0
+    owner_role: Payments
+    depends_on: [T-01]
+    effort_hours: 1.5
+    touches: ['src/server/model/vertex.ts', 'src/server/model/extraction.ts', 'tests/contract/extraction.test.ts', 'tests/fixtures/photos/']
+    reads_first: [adr/006-gemini-vertex.md, '05-interface-contract.md: Extraction schema']
+    tests: [TC-AI-01]
+    spikes: [SPK-04]
+    done: 5 real photos give schema-valid JSON under 15 s each; the auth path is recorded in evidence/SPK-04.md.
+  - id: T-05
+    title: Serve the MCP server with one tool and the Storefront resource; render in Claude and ChatGPT (SPK-02, SPK-07)
+    milestone: M0
+    owner_role: Payments
+    depends_on: [T-01]
+    effort_hours: 2
+    touches: ['src/server/mcp/server.ts', 'src/server/mcp/storefront.generated.ts', 'storefront/package.json', 'storefront/vite.config.ts', 'storefront/src/main.tsx', 'storefront/index.html', 'scripts/embed_storefront.mjs']
+    reads_first: [adr/002-mcp-handler.md, adr/009-storefront-build.md, '05-interface-contract.md: MCP surface']
+    tests: [TC-MCP-01]
+    spikes: [SPK-02, SPK-07]
+    done: A hello Storefront renders in Claude (custom connector) and ChatGPT (developer mode); a button calls a tool and shows the answer; screenshots in evidence/SPK-02.md.
+  - id: T-06
+    title: Prove the open-link Pay page path end to end (SPK-03)
+    milestone: M0
+    owner_role: Payments
+    depends_on: [T-03, T-05]
+    effort_hours: 1.5
+    touches: ['src/app/pay/[order]/page.tsx', 'src/app/api/pay/[order]/route.ts', 'src/app/api/pay/[order]/capture/route.ts', 'storefront/src/main.tsx']
+    reads_first: [adr/005-pay-page-open-link.md]
+    tests: []
+    spikes: [SPK-03]
+    done: In Claude, a button opens the Pay page, the sandbox buyer approves, the server captures, and the Storefront shows Captured by polling within 10 s.
+  - id: T-07
+    title: Prove Log in with PayPal and the payee email (SPK-06)
+    milestone: M0
+    owner_role: Frontend
+    depends_on: [T-03]
+    effort_hours: 1.5
+    touches: ['src/server/auth/paypal_login.ts', 'src/server/auth/session.ts', 'src/app/api/auth/paypal/start/route.ts', 'src/app/api/auth/paypal/return/route.ts']
+    reads_first: [adr/008-login-with-paypal.md]
+    tests: [TC-SEL-01]
+    spikes: [SPK-06]
+    done: A sandbox business account signs in; an order with its email as payee captures into that account.
+  - id: T-08
+    title: Write the domain rules (cart pricing, state machines, invariants) with unit tests
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-02]
+    effort_hours: 2
+    touches: ['src/server/domain/money.ts', 'src/server/domain/cart.ts', 'src/server/domain/order.ts', 'src/server/domain/refund.ts', 'src/server/domain/ids.ts', 'tests/unit/domain.test.ts']
+    reads_first: ['02-domain-contract.md: State machines, Invariants', '04-data-contract.md: Write rules']
+    tests: [TC-PAY-02, TC-PAY-06, TC-CART-04]
+    done: Every transition of SM-CRT, SM-ORD and SM-RFD has a unit test, including refused ones.
+  - id: T-09
+    title: Add search_products, show_product and update_cart
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-05, T-08]
+    effort_hours: 2
+    touches: ['src/server/mcp/tools/search.ts', 'src/server/mcp/tools/product.ts', 'src/server/mcp/tools/cart.ts', 'src/server/carts.ts', 'tests/integration/mcp_buyer.test.ts']
+    reads_first: ['05-interface-contract.md: MCP surface']
+    tests: [TC-MCP-01, TC-MCP-02, TC-MCP-03, TC-CART-02]
+    done: The three tools answer per Gate 5 with text and structured content.
+  - id: T-10
+    title: Add start_checkout, the Pay page and the capture route with signed tokens
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-06, T-09]
+    effort_hours: 2.5
+    touches: ['src/server/mcp/tools/checkout.ts', 'src/server/checkout.ts', 'src/server/auth/tokens.ts', 'src/app/pay/[order]/page.tsx', 'src/app/api/pay/[order]/route.ts', 'src/app/api/pay/[order]/capture/route.ts', 'tests/integration/checkout.test.ts']
+    reads_first: [adr/005-pay-page-open-link.md, '01-product-contract.md: FL-BUY-03']
+    tests: [TC-PAY-01, TC-PAY-03, TC-SEC-02]
+    done: AC-BUY-03-01 to AC-BUY-03-03 pass.
+  - id: T-11
+    title: Add the webhook route and the reconciler
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-10]
+    effort_hours: 1.5
+    touches: ['src/app/api/webhooks/paypal/route.ts', 'src/server/webhooks.ts', 'src/server/reconcile.ts', 'src/worker.ts', 'tests/integration/webhooks.test.ts']
+    reads_first: ['03-architecture-contract.md: Sequences', '05-interface-contract.md: PayPal webhooks']
+    tests: [TC-PAY-04, TC-PAY-09]
+    done: AC-BUY-03-05 and AC-BUY-03-06 pass.
+  - id: T-12
+    title: Add get_order_status and request_refund
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-10]
+    effort_hours: 1.5
+    touches: ['src/server/mcp/tools/order.ts', 'src/server/refunds.ts', 'tests/integration/mcp_order.test.ts']
+    reads_first: ['01-product-contract.md: FL-BUY-04, FL-BUY-05']
+    tests: [TC-MCP-04, TC-MCP-05, TC-SEC-03]
+    done: AC-BUY-04-01 to AC-BUY-05-03 pass.
+  - id: T-13
+    title: Build the Storefront views (results, product, cart, checkout, order) from the design system
+    milestone: M1
+    owner_role: Frontend
+    depends_on: [T-05, T-29]
+    effort_hours: 4
+    touches: ['storefront/src/']
+    reads_first: ['05-interface-contract.md: The Storefront view contract', docs/design/DESIGN-SYSTEM.md, '02-PRD.md: Experience rules']
+    tests: [TC-PAY-08]
+    done: Each view renders the Gate 5 shapes; every state has a loading, empty and error form; reduced motion holds.
+  - id: T-14
+    title: Add the MCP host allow list and the rate limit
+    milestone: M1
+    owner_role: Payments
+    depends_on: [T-05]
+    effort_hours: 0.5
+    touches: ['src/server/ratelimit.ts', 'src/worker.ts', 'tests/integration/ratelimit.test.ts']
+    reads_first: ['03-architecture-contract.md: Threat model']
+    tests: [TC-MCP-06]
+    done: TC-MCP-06 passes.
+  - id: T-15
+    title: Build sign-in and store creation in the Seller app
+    milestone: M2
+    owner_role: Frontend
+    depends_on: [T-07, T-29]
+    effort_hours: 2
+    touches: ['src/app/app/layout.tsx', 'src/app/app/page.tsx', 'src/app/app/new-store/page.tsx', 'src/app/api/seller/store/route.ts', 'src/server/auth/require_store.ts', 'tests/integration/seller_store.test.ts']
+    reads_first: ['01-product-contract.md: FL-SEL-01']
+    tests: [TC-SEL-01, TC-SEL-02]
+    done: AC-SEL-01-01 to AC-SEL-01-04 pass on a 375 px screen.
+  - id: T-16
+    title: Build photo upload, the extraction queue consumer and drafts
+    milestone: M2
+    owner_role: Payments
+    depends_on: [T-04, T-15]
+    effort_hours: 2.5
+    touches: ['src/app/api/seller/photos/route.ts', 'src/server/photos.ts', 'src/server/extraction_consumer.ts', 'src/worker.ts', 'src/app/photos/[key]/route.ts', 'src/app/app/add/page.tsx']
+    reads_first: ['01-product-contract.md: FL-SEL-02', adr/003-data-stores.md]
+    tests: [TC-AI-01, TC-AI-03, TC-PERF-02]
+    done: AC-SEL-02-01 to AC-SEL-02-04 pass.
+  - id: T-17
+    title: Build review, price confirmation and publish
+    milestone: M2
+    owner_role: Frontend
+    depends_on: [T-16]
+    effort_hours: 2
+    touches: ['src/app/app/products/[id]/page.tsx', 'src/app/api/seller/products/route.ts', 'src/app/api/seller/products/[id]/route.ts', 'src/app/api/seller/products/[id]/publish/route.ts', 'src/app/api/seller/products/[id]/unpublish/route.ts']
+    reads_first: ['01-product-contract.md: FL-SEL-03']
+    tests: [TC-AI-02]
+    done: AC-SEL-03-01 to AC-SEL-03-03 pass; "Suggested" marks clear when a field is edited.
+  - id: T-18
+    title: Build orders and tracking in the Seller app
+    milestone: M2
+    owner_role: Frontend
+    depends_on: [T-11, T-15]
+    effort_hours: 2
+    touches: ['src/app/app/orders/page.tsx', 'src/app/app/orders/[id]/page.tsx', 'src/app/api/seller/orders/route.ts', 'src/app/api/seller/orders/[id]/route.ts', 'src/app/api/seller/orders/[id]/tracking/route.ts']
+    reads_first: ['01-product-contract.md: FL-SEL-04']
+    tests: [TC-PAY-07, TC-SEC-01]
+    done: AC-SEL-04-01 and AC-SEL-04-02 pass.
+  - id: T-19
+    title: Build the refund decision in the Seller app
+    milestone: M2
+    owner_role: Frontend
+    depends_on: [T-12, T-18]
+    effort_hours: 1.5
+    touches: ['src/app/app/orders/[id]/refund.tsx', 'src/app/api/seller/refunds/[id]/approve/route.ts', 'src/app/api/seller/refunds/[id]/decline/route.ts']
+    reads_first: ['01-product-contract.md: FL-SEL-05']
+    tests: [TC-PAY-05, TC-PAY-06]
+    done: AC-SEL-05-01 to AC-SEL-05-04 pass; approve is two taps.
+  - id: T-20
+    title: Add Web Push for Paid and Refund requested (Should)
+    milestone: M2
+    owner_role: Frontend
+    depends_on: [T-18]
+    effort_hours: 1.5
+    touches: ['src/server/push/web_push.ts', 'src/app/api/seller/push/route.ts', 'public/sw.js', 'public/manifest.webmanifest']
+    reads_first: ['03-SyRS.md: SYS-SEL-05']
+    tests: []
+    done: A sandbox capture makes the seller's phone show a notification within 15 s (Manual, AC-SEL-04-03). Skip if M2 ends late.
+  - id: T-21
+    title: Add the Cart API v1 routes, store keys and the agent contract script
+    milestone: M3
+    owner_role: Payments
+    depends_on: [T-10]
+    effort_hours: 2.5
+    touches: ['src/server/cartapi/', 'src/app/api/stores/[slug]/merchant-cart/route.ts', 'src/app/api/stores/[slug]/merchant-cart/[id]/route.ts', 'src/app/api/stores/[slug]/merchant-cart/[id]/checkout/route.ts', 'src/app/api/seller/store-keys/route.ts', 'scripts/agent_buy.mjs', 'tests/integration/cartapi.test.ts']
+    reads_first: [adr/007-cart-api-contract.md, '05-interface-contract.md: Cart API v1']
+    tests: [TC-CART-01, TC-CART-03, TC-CART-05]
+    done: AC-AGT-01-01 to AC-AGT-01-04 pass; `node scripts/agent_buy.mjs maya-mugs` buys one mug.
+  - id: T-22
+    title: Build the Try page (Gemini chat, Storefront host bridge, sandbox buyer box)
+    milestone: M3
+    owner_role: Frontend
+    depends_on: [T-13, T-04]
+    effort_hours: 3
+    touches: ['src/app/try/page.tsx', 'src/app/try/host_bridge.tsx', 'src/app/api/try/chat/route.ts', 'src/server/try_chat.ts']
+    reads_first: [adr/010-try-page.md, '01-product-contract.md: FL-JDG-01']
+    tests: [TC-E2E-01]
+    done: AC-JDG-01-01 to AC-JDG-01-03 pass in a fresh browser with no login.
+  - id: T-23
+    title: Seed the two demo stores with real photos and confirmed prices
+    milestone: M3
+    owner_role: Lead
+    depends_on: [T-17]
+    effort_hours: 1
+    touches: ['db/seed.sql', 'tests/fixtures/photos/']
+    reads_first: ['04-data-contract.md: Seed data']
+    tests: []
+    done: maya-mugs and river-prints each show 4 to 6 published products with photos the founders own.
+  - id: T-24
+    title: Build the landing page and the public store page
+    milestone: M3
+    owner_role: Frontend
+    depends_on: [T-29]
+    effort_hours: 1.5
+    touches: ['src/app/(marketing)/page.tsx', 'src/app/s/[slug]/page.tsx']
+    reads_first: [docs/design/DESIGN-SYSTEM.md, '00-concept.md: The product in one sentence']
+    tests: []
+    done: The landing page states the one sentence, links the Try page and the repository, and passes TC-A11Y-01.
+  - id: T-25
+    title: Add CI and the check scripts (traceability, secrets, smoke)
+    milestone: M4
+    owner_role: Payments
+    depends_on: [T-09]
+    effort_hours: 1
+    touches: ['.github/workflows/ci.yml', 'scripts/check_traceability.mjs', 'scripts/check_secrets.sh', 'scripts/smoke.sh']
+    reads_first: ['06-quality-contract.md: CI checks, Deploy and rollback']
+    tests: [TC-SEC-04]
+    done: CI is green on main.
+  - id: T-26
+    title: Run E2E, performance and accessibility checks
+    milestone: M4
+    owner_role: Frontend
+    depends_on: [T-19, T-21, T-22]
+    effort_hours: 2
+    touches: ['tests/e2e/', 'docs/engineering/evidence/']
+    reads_first: ['06-quality-contract.md: Test catalogue']
+    tests: [TC-E2E-01, TC-E2E-02, TC-PERF-01, TC-PERF-02, TC-A11Y-01, TC-PAY-08, TC-HOST-01]
+    done: Every listed test passes or has evidence; failures are fixed or written in the README "Known limits".
+  - id: T-27
+    title: Write the README judge path and make the repository public
+    milestone: M4
+    owner_role: Lead
+    depends_on: [T-26]
+    effort_hours: 1
+    touches: ['README.md']
+    reads_first: ['00-concept.md: The position', '06-quality-contract.md: Deploy and rollback']
+    tests: []
+    done: README has the one sentence, the Try link, the five-minute judge path, sandbox buyer login, the architecture diagram, the verified and not verified table, and the Worker version used in the video. The repository is public with the MIT license visible.
+  - id: T-28
+    title: Record the video and submit on Devpost
+    milestone: M4
+    owner_role: Lead
+    depends_on: [T-27]
+    effort_hours: 2
+    touches: []
+    reads_first: ['06-quality-contract.md: Demo script']
+    tests: []
+    done: A public YouTube video under 3 minutes; the Devpost form submitted before 12 Nov 22:00 IST; Devpost shows it received.
+  - id: T-29
+    title: Turn the design system into tokens and base components
+    milestone: M1
+    owner_role: Frontend
+    depends_on: [T-01]
+    effort_hours: 2
+    touches: ['src/styles/tokens.css', 'src/styles/globals.css', 'src/components/ui/', 'storefront/src/tokens.css', 'public/icon.svg', 'public/logo.svg']
+    reads_first: [docs/design/DESIGN-SYSTEM.md, docs/design/BRAND.md]
+    tests: []
+    done: Every colour, type size, space, radius and duration in the code comes from tokens.css; the Button, Field, Card, Price, Status and Sheet components exist.
