@@ -99,6 +99,7 @@ Kinds: Unit (pure domain code), Integration (Worker runtime with local D1 via `@
 | Schema match | `pnpm drizzle-kit check` | Yes |
 | Traceability | `node scripts/check_traceability.mjs`: every TC ID in this file appears in a test name, or is marked Manual | Yes, from 12 Nov 14:00 IST |
 | Secrets | `scripts/check_secrets.sh` | Yes |
+| Code quality | ESLint rules: `@typescript-eslint/switch-exhaustiveness-check` (CQ-05), `react/no-danger` (CQ-19), a `no-restricted-syntax` ban on `transition: all` and on assigning `.state =` outside `src/server/domain/` (CQ-02, CQ-13) | Yes |
 
 ## Deploy and rollback
 

@@ -16,6 +16,7 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 
 | Need | Read |
 | --- | --- |
+| How code must look: state, libraries, motion, data on screen | `docs/engineering/code-quality.md` |
 | What "done" means for a flow | Gate 1, `01-product-contract.md` |
 | Words, states, invariants, who may do what | Gate 2, `02-domain-contract.md` |
 | Containers, stack, threats, ADRs | Gate 3, `03-architecture-contract.md`, `adr/` |
@@ -40,6 +41,8 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 10. **No secret in code, logs, tests or the Storefront.** Secrets come from Worker secrets only.
 11. **No fake data shown as real.** Demo stores are marked as demo. Never claim an unmeasured number.
 12. **No duplicate.** Search before you add a helper or a type.
+13. **No implicit state machines.** Anything with more than two states has one `state` field typed as a union and one transition table; never a mix of booleans, nullable fields or timestamps (CQ-01).
+14. **Follow the code quality rules** in `docs/engineering/code-quality.md` (CQ-01 to CQ-20). A reviewer rejects with the rule ID.
 
 ## How you work on a task
 
