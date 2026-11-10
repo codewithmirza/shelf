@@ -12,7 +12,7 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 2. `docs/engineering/02-domain-contract.md`, "Glossary". It is the dictionary of this repository.
 3. The Gate 1 flows and acceptance criteria your task names (`01-product-contract.md`).
 4. The Gate 6 test IDs of your task (`06-quality-contract.md`, "Test catalogue").
-5. For a UI task: `docs/design/DESIGN-SYSTEM.md` and `docs/design/BRAND.md`.
+5. For a UI task: the Figma file "Shelf · Design system and app screens" (fileKey `07OeRO9BvPAmfQoeT44L6N`, https://www.figma.com/design/07OeRO9BvPAmfQoeT44L6N), `docs/design/DESIGN-SYSTEM.md` and `docs/design/BRAND.md`. Screen IDs (S1 to S12, P1 to P4, A1 to A13, T1, T2, L1, L2) and flows F1 to F5 in Figma match the Gate 1 flows.
 
 | Need | Read |
 | --- | --- |

@@ -148,7 +148,7 @@ tasks:
     depends_on: [T-05, T-29]
     effort_hours: 4
     touches: ['storefront/src/']
-    reads_first: ['05-interface-contract.md: The Storefront view contract', docs/design/DESIGN-SYSTEM.md, '02-PRD.md: Experience rules']
+    reads_first: ['05-interface-contract.md: The Storefront view contract', docs/design/DESIGN-SYSTEM.md, 'Figma: Storefront (in chat), S1 to S12', '02-PRD.md: Experience rules', docs/engineering/code-quality.md]
     tests: [TC-PAY-08]
     done: Each view renders the Gate 5 shapes; every state has a loading, empty and error form; reduced motion holds.
   - id: T-14

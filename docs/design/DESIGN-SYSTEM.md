@@ -10,7 +10,15 @@
 
 Sources: `BRAND.md`; Emil Kowalski's standards (emil-design-eng, review-animations STANDARDS, ui-cheatsheet). Every rule here is testable by reading the code or the screen.
 
-The founders keep a live reference of these components with previews in both themes. Product code is built from this file and `tokens.css`.
+The Figma file "Shelf · Design system and app screens" (https://www.figma.com/design/07OeRO9BvPAmfQoeT44L6N) holds the same tokens as variables (Color with Light and Dark modes, Space, Radius), the text and effect styles, every component, every screen and the five flows. When this file and Figma differ, this file wins; fix Figma. Product code is built from this file, `tokens.css` and the Figma screens.
+
+| Figma page | Screens | Gate 1 flows |
+| --- | --- | --- |
+| Storefront (in chat) | S1 to S12 | FL-BUY-01 to FL-BUY-05 |
+| Pay page | P1 to P4 | FL-BUY-03 |
+| Seller app | A1 to A13 | FL-SEL-01 to FL-SEL-05 |
+| Try page and landing | T1, T2, L1, L2 | FL-JDG-01 |
+| Flows | F1 to F5 | All |
 
 ## Foundations
 
