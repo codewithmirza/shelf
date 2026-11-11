@@ -1,0 +1,15 @@
+{
+  "candidates": [
+    {
+      "finishReason": "STOP",
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "{\"is_product\":true,\"title\":\"Speckled stoneware mug\",\"description\":\"Wheel-thrown stoneware mug with a speckled oat glaze and a dark rim.\",\"category\":\"ceramics\",\"variants\":[{\"options\":{\"Size\":\"Small\"}},{\"options\":{\"Size\":\"Large\"}}],\"suggested_price_usd\":{\"min\":28,\"max\":34},\"flags\":[]}"
+          }
+        ]
+      }
+    }
+  ]
+}
