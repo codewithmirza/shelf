@@ -80,7 +80,7 @@ export function memoryOrderRepo(carts: ReturnType<typeof memoryCartRepo>, clock:
     async byId(id) { return orders.get(id) ?? null; },
     async byCart(cart) { return [...orders.values()].find((o) => o.cartId === cart) ?? null; },
     async byPayPalId(id) { return [...orders.values()].find((o) => o.paypalOrderId === id) ?? null; },
-    async payeeEmail(store) { return PAYEES[store] ?? null; },
+    async payee(store) { const e = PAYEES[store]; return e ? { email: e } : null; },
     async insertCreated(o) {
       if (failNextInsert) { failNextInsert = false; throw new Error("D1 down"); }
       if ([...orders.values()].some((x) => x.cartId === o.cartId)) throw new Error("UNIQUE cart_id");

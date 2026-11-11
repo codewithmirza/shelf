@@ -30,7 +30,7 @@ describe("start_checkout (T-10)", () => {
     const create = w.paypal.calls.filter((c) => c.kind === "create");
     expect(create).toHaveLength(1);
     expect(create[0]!.key).toBe(`order:${cart.id}:v1`);
-    expect(create[0]!.input).toMatchObject({ payeeEmail: PAYEES.sto_maya, subtotalCents: 4800, shippingCents: 600, totalCents: 5400 });
+    expect(create[0]!.input).toMatchObject({ payee: { email: PAYEES.sto_maya }, subtotalCents: 4800, shippingCents: 600, totalCents: 5400 });
     expect(w.repo.carts.get(cart.id)!.state).toBe("checking_out");
     expect(r.result.content[0].text).toContain("Not paid yet");
   });

@@ -6,7 +6,7 @@ import type { PayPalDeps } from "@/server/paypal/http";
 import { sqliteD1 } from "../support/d1";
 import { fakeIds } from "../support/fakes";
 
-const who = { accountId: "PAYERID123", email: "maya@seller.test", name: "Maya" };
+const who = { accountId: "PAYERID123", isPayerId: false, email: "maya@seller.test", name: "Maya" };
 
 describe("Log in with PayPal (TC-SEL-01)", () => {
   it("the authorize URL asks for the ADR-008 scopes, with state and the return URL", () => {
@@ -17,9 +17,11 @@ describe("Log in with PayPal (TC-SEL-01)", () => {
   });
 
   it("reads both userinfo schemas; an answer without email is refused", () => {
-    expect(identityFrom({ payer_id: "P1", emails: [{ value: "a@x.test", primary: false }, { value: "Main@X.test", primary: true }], name: "A" })).toEqual({ ok: true, value: { accountId: "P1", email: "main@x.test", name: "A" } });
-    expect(identityFrom({ user_id: "https://www.paypal.com/webapps/auth/identity/user/U9", email: "b@x.test" })).toMatchObject({ ok: true, value: { accountId: "U9" } });
-    expect(identityFrom({ payer_id: "P1" }).ok).toBe(false);
+    expect(identityFrom({ payer_id: "P1", emails: [{ value: "a@x.test", primary: false }, { value: "Main@X.test", primary: true }], name: "A" })).toEqual({ ok: true, value: { accountId: "P1", isPayerId: true, email: "main@x.test", name: "A" } });
+    expect(identityFrom({ user_id: "https://www.paypal.com/webapps/auth/identity/user/U9", email: "b@x.test" })).toMatchObject({ ok: true, value: { accountId: "U9", isPayerId: false } });
+    // A payer ID alone is enough: payments go to it as merchant_id even when no email is shared.
+    expect(identityFrom({ payer_id: "ABCDEFGHJKLMN" })).toEqual({ ok: true, value: { accountId: "ABCDEFGHJKLMN", isPayerId: true, email: "", name: "Seller" } });
+    expect(identityFrom({ user_id: "https://x/U9" }).ok).toBe(false);
   });
 
   it("exchanges the code once and falls back to the older userinfo path", async () => {

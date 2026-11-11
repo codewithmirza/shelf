@@ -33,7 +33,7 @@ async function sellerWorld() {
   const { bucket, objects } = fakeBucket();
   const photos: PhotoDeps = { db, bucket, ids, queue: { send: async (b) => { sent.push(b); } } };
   const mkSeller = async (accountId: string, slug: string) => {
-    const { sellerId } = await signIn(d1SessionRepo(db), ids, { accountId, email: `${slug}@seller.test`, name: slug });
+    const { sellerId } = await signIn(d1SessionRepo(db), ids, { accountId, isPayerId: false, email: `${slug}@seller.test`, name: slug });
     const s = await createStore(d1SellerStoreRepo(db), ids, { id: sellerId, email: "", name: "", storeId: null }, { name: slug, slug, shipping: 6 });
     if (!s.ok) throw new Error("store");
     return s.value.id;

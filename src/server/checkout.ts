@@ -31,7 +31,8 @@ export interface CaptureFacts {
 export interface OrderRepo {
   byId(id: OrderId): Promise<OrderRow | null>;
   byCart(cart: CartId): Promise<OrderRow | null>;
-  payeeEmail(store: StoreId): Promise<string | null>;
+  // Where the seller is paid. Null when the store has no payable seller.
+  payee(store: StoreId): Promise<CreateOrderInput["payee"] | null>;
   // T-ORD-01 and its Event, in one batch.
   insertCreated(order: OrderRow, eventId: string, now: string): Promise<void>;
   // T-ORD-03, T-CRT-05, the stock decrease and one Event, in one batch that does nothing
@@ -130,12 +131,12 @@ async function reprice(deps: CheckoutDeps, cart: StoredCart, store: StoreRow, no
 }
 
 async function createAndRecord(deps: CheckoutDeps, cart: StoredCart, store: StoreRow, now: Date): Promise<Result<CheckoutLink, DomainError>> {
-  const payee = await deps.orders.payeeEmail(store.id);
+  const payee = await deps.orders.payee(store.id);
   if (!payee) return err(domainError("server.error", "store without payee"));
   const id = asOrderId(prefixedId("ord", deps.ids));
   const created = await deps.payments.createOrder({
     cartId: cart.id,
-    payeeEmail: payee,
+    payee,
     storeName: store.name,
     lines: cart.lines.map((l) => ({ name: l.title, sku: l.variantId, quantity: l.quantity, unitPriceCents: l.unitPriceCents })),
     subtotalCents: cart.subtotalCents,
@@ -253,9 +254,15 @@ export function d1OrderRepo(db: D1Database): OrderRepo {
       const r = await db.prepare(`SELECT ${ORDER_COLS} FROM orders WHERE cart_id = ?`).bind(cart).first<OrderDbRow>();
       return r ? rowToOrder(r) : null;
     },
-    async payeeEmail(store) {
-      const r = await db.prepare("SELECT se.paypal_email FROM stores st JOIN sellers se ON se.id = st.seller_id WHERE st.id = ?").bind(store).first<{ paypal_email: string }>();
-      return r?.paypal_email ?? null;
+    async payee(store) {
+      const r = await db
+        .prepare("SELECT se.paypal_account_id, se.paypal_email FROM stores st JOIN sellers se ON se.id = st.seller_id WHERE st.id = ?")
+        .bind(store)
+        .first<{ paypal_account_id: string; paypal_email: string }>();
+      if (!r) return null;
+      // A payer ID is 13 upper-case letters and digits; anything else is a user id and cannot be a payee.
+      if (/^[A-Z0-9]{13}$/.test(r.paypal_account_id)) return { merchantId: r.paypal_account_id };
+      return r.paypal_email ? { email: r.paypal_email } : null;
     },
     async insertCreated(o, eventId, now) {
       await db.batch([

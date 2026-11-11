@@ -39,7 +39,7 @@ describe("PayPal client", () => {
   it("TC-PAY-01 (unit): create order sends server totals, payee and PayPal-Request-Id", async () => {
     const { deps, calls } = fakeDeps([token(), json(201, orderBody)]);
     const res = await createOrder(deps, {
-      cartId: "CART-ABCDEFGHJKLM", payeeEmail: "maya@example.com", storeName: "Maya Mugs",
+      cartId: "CART-ABCDEFGHJKLM", payee: { merchantId: "ABCDEFGHJKLMN" }, storeName: "Maya Mugs",
       lines: [{ name: "Speckled mug", sku: "MUG-S", quantity: 2, unitPriceCents: cents(2400) }],
       subtotalCents: cents(4800), shippingCents: cents(600), totalCents: cents(5400),
       returnUrl: "https://shelf.test/pay/return", cancelUrl: "https://shelf.test/pay/cancel", requestId: "order:CART-ABCDEFGHJKLM:v1",
@@ -49,7 +49,7 @@ describe("PayPal client", () => {
     expect(header(call, "paypal-request-id")).toBe("order:CART-ABCDEFGHJKLM:v1");
     const body = JSON.parse(String(call.init.body));
     expect(body.purchase_units[0].amount).toEqual({ currency_code: "USD", value: "54.00", breakdown: { item_total: { currency_code: "USD", value: "48.00" }, shipping: { currency_code: "USD", value: "6.00" } } });
-    expect(body.purchase_units[0].payee).toEqual({ email_address: "maya@example.com" });
+    expect(body.purchase_units[0].payee).toEqual({ merchant_id: "ABCDEFGHJKLMN" });
   });
 
   it("CQ-29: retries a 503 with the same request id, then succeeds", async () => {

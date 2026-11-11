@@ -14,7 +14,11 @@ export function authorizeUrl(baseUrl: string, clientId: string, redirectUri: str
 }
 
 export interface PayPalIdentity {
+  // The payer ID (merchant ID) when PayPal shares it; else the stable user id. It identifies the seller.
   readonly accountId: string;
+  // True when accountId is a payer ID, which Orders v2 accepts as payee.merchant_id.
+  readonly isPayerId: boolean;
+  // Empty when the app's email attribute is not approved yet; payments then go to the payer ID.
   readonly email: string;
   readonly name: string;
 }
@@ -33,13 +37,19 @@ export function identityFrom(info: unknown): Result<PayPalIdentity, DomainError>
   const p = userinfoSchema.safeParse(info);
   if (!p.success) return err(domainError("paypal.unavailable", "userinfo shape"));
   const accountId = p.data.payer_id ?? p.data.user_id?.split("/").pop();
-  const email = p.data.emails?.find((e) => e.primary)?.value ?? p.data.emails?.[0]?.value ?? p.data.email;
-  if (!accountId || !email || !email.includes("@")) return err(domainError("paypal.unavailable", "userinfo without id or email"));
-  return ok({ accountId, email: email.toLowerCase(), name: (p.data.name ?? email.split("@")[0] ?? "Seller").slice(0, 80) });
+  const raw = p.data.emails?.find((e) => e.primary)?.value ?? p.data.emails?.[0]?.value ?? p.data.email ?? "";
+  const email = raw.includes("@") ? raw.toLowerCase() : "";
+  if (!accountId) return err(domainError("paypal.unavailable", "userinfo without an account id"));
+  // A seller needs somewhere to be paid: a payer ID, or else an email.
+  if (!p.data.payer_id && !email) return err(domainError("paypal.unavailable", "userinfo without payer id or email"));
+  return ok({ accountId, isPayerId: Boolean(p.data.payer_id), email, name: (p.data.name ?? (email.split("@")[0] || "Seller")).slice(0, 80) });
 }
 
 // Exchanges the code and reads who signed in. Neither call is retried: a code works once.
-export async function identityFromCode(deps: PayPalDeps, code: string, redirectUri: string): Promise<Result<PayPalIdentity, DomainError>> {
+// The step that failed, for the sign-in page and the log. Never holds a token or personal data.
+export type SignInStep = "token" | "userinfo" | "identity";
+
+export async function identityFromCode(deps: PayPalDeps, code: string, redirectUri: string): Promise<Result<PayPalIdentity, DomainError & { step: SignInStep }>> {
   const basic = btoa(`${deps.clientId}:${deps.clientSecret}`);
   const tokenRes = await deps.fetch(`${deps.baseUrl}/v1/oauth2/token`, {
     method: "POST",
@@ -47,12 +57,18 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
     body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri }).toString(),
     signal: AbortSignal.timeout(10_000),
   }).catch(() => null);
-  if (!tokenRes) return err(domainError("paypal.unavailable", "token network"));
-  const token = tokenSchema.safeParse(await tokenRes.json().catch(() => null));
-  if (!tokenRes.ok || !token.success) return err(domainError("auth.required", `token ${tokenRes.status}`));
+  if (!tokenRes) return err({ ...domainError("paypal.unavailable", "token network"), step: "token" });
+  const tokenBody = (await tokenRes.json().catch(() => null)) as { error?: string; error_description?: string } | null;
+  const token = tokenSchema.safeParse(tokenBody);
+  if (!tokenRes.ok || !token.success) return err({ ...domainError("auth.required", `token ${tokenRes.status} ${tokenBody?.error ?? ""}`.trim()), step: "token" });
+  const statuses: string[] = [];
   for (const path of ["/v1/identity/oauth2/userinfo?schema=paypalv1.1", "/v1/identity/openidconnect/userinfo?schema=openid"]) {
     const res = await deps.fetch(`${deps.baseUrl}${path}`, { headers: { authorization: `Bearer ${token.data.access_token}` }, signal: AbortSignal.timeout(10_000) }).catch(() => null);
-    if (res?.ok) return identityFrom(await res.json().catch(() => null));
+    statuses.push(String(res?.status ?? "network"));
+    if (res?.ok) {
+      const who = identityFrom(await res.json().catch(() => null));
+      return who.ok ? who : err({ ...who.error, step: "identity" });
+    }
   }
-  return err(domainError("paypal.unavailable", "userinfo"));
+  return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")}`), step: "userinfo" });
 }

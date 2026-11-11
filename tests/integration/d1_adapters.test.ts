@@ -100,6 +100,14 @@ describe("D1 adapters on the real schema", () => {
     expect(await w.q("SELECT COUNT(*) AS n FROM carts WHERE state = 'expired'")).toEqual([{ n: 2 }]);
   });
 
+  it("SYS-PAY-02: the payee is the seller's merchant ID when known, else their email", async () => {
+    const w = d1World();
+    expect(await w.deps.orders.payee("sto_demo_maya" as never)).toEqual({ email: "sb-maya-seller@example.com" });
+    await w.db.prepare("UPDATE sellers SET paypal_account_id = 'ABCDEFGHJKLMN', paypal_email = '' WHERE id = 'sel_demo_maya'").run();
+    expect(await w.deps.orders.payee("sto_demo_maya" as never)).toEqual({ merchantId: "ABCDEFGHJKLMN" });
+    expect(await w.deps.orders.payee("sto_nope" as never)).toBeNull();
+  });
+
   it("webhook events are recorded once (INV-08)", async () => {
     const { db } = d1World();
     const repo = d1WebhookRepo(db);

@@ -36,7 +36,8 @@ export interface CreateOrderInput {
   // Our cart ID as the PayPal reference_id, so a support person can find the cart from PayPal.
   // No order ID is sent: a retry with the same request ID must send the same body.
   readonly cartId: string;
-  readonly payeeEmail: string;
+  // The seller as payee: their PayPal merchant (payer) ID, or their email when that is all PayPal shared.
+  readonly payee: { readonly merchantId: string } | { readonly email: string };
   readonly storeName: string;
   readonly lines: readonly OrderLineForPayPal[];
   readonly subtotalCents: Cents;
@@ -60,7 +61,7 @@ export async function createOrder(deps: PayPalDeps, input: CreateOrderInput): Pr
     purchase_units: [
       {
         reference_id: input.cartId,
-        payee: { email_address: input.payeeEmail },
+        payee: "merchantId" in input.payee ? { merchant_id: input.payee.merchantId } : { email_address: input.payee.email },
         amount: { ...toMoney(input.totalCents), breakdown: { item_total: toMoney(input.subtotalCents), shipping: toMoney(input.shippingCents) } },
         items: input.lines.map((l) => ({ name: l.name.slice(0, 127), sku: l.sku, quantity: String(l.quantity), unit_amount: toMoney(l.unitPriceCents), category: "PHYSICAL_GOODS" })),
       },
