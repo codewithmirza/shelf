@@ -32,3 +32,13 @@ export async function sellerContext(request: Request): Promise<{ ok: true; env: 
 }
 
 export const nowIso = () => new Date().toISOString();
+
+// SYS-CART-05: the one function that checks a Cart API caller. R1 checks a store key hash; it can later
+// verify PayPal's JWT without touching the routes (ADR-007 point 2).
+export async function verifyCartCaller(request: Request, slug: string): Promise<{ ok: true; env: ShelfEnv; caller: import("./cart_api").CartCaller } | { ok: false; response: Response }> {
+  const env = shelfEnv();
+  const { storeForKey } = await import("./seller/keys");
+  const key = await storeForKey(env.DB, request.headers.get("authorization"));
+  if (!key || key.slug !== slug) return { ok: false, response: errorResponse({ code: "auth.store_key_invalid" }) };
+  return { ok: true, env, caller: key };
+}

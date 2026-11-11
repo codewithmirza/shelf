@@ -32,8 +32,9 @@
 | T-14 | MCP host allow list and rate limit | Done | TC-MCP-06 on real SQLite: 61st call per minute per address gets 429; wrong host and foreign Origin refused; addresses stored only as HMAC |
 | T-15 | Seller sign-in and store creation | Done (server) | TC-SEL-01, TC-SEL-02 on real SQLite: state check, both userinfo schemas, 7-day __Host- cookie, one seller per PayPal account, link rules and suggestions. Live sign-in waits for S-06 |
 | T-16 | Seller app screens | Done | A1 to A13 built; walked locally in a browser at 390 px: name store, empty products, upload, reading bar, failed read, Fill in yourself, price guard, publish, orders empty, store key shown once |
-| T-21 | Cart API v1 | Next | — |
+| T-21 | Cart API v1 | Done (local) | TC-CART-02, -03, -05 and TC-CART-01 against the PayPal fake on real SQLite; scripts/cart_agent.mjs for the live run; ADR-007 amended |
 | T-22 | Try page | In progress | Search-box host done and checked locally; Gemini chat waits for S-03 |
+| T-24 | Store page and landing page | Next | — |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -53,6 +54,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:48 | Claude | T-21: Cart API v1 routes behind verifyCartCaller (store key hash), carts bound to their key, checkout through startCheckout, agent script. |
 | 11 Nov 11:46 | Claude | T-16 to T-19 UI: Seller app screens, two-tap refund confirm, tracking sheet, store keys; /api/health reports D1, PayPal token, secrets set (no values). |
 | 11 Nov 11:36 | Claude | T-07/T-15: Log in with PayPal, sessions, store creation. T-16 to T-19 server: photo upload to R2 and the queue, extraction consumer, edit/publish with INV-03 and Suggested marks, seller orders, tracking, refund approve (two phases, refund:{id}) and decline. Change: /photos/{key} serves published products only instead of a signed URL. |
 | 11 Nov 11:29 | Claude | T-14: /mcp guard: own host only, no cross-site browser calls, 60 per minute per address in D1 (keyed hash, swept by the cron). |

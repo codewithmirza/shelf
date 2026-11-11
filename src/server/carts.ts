@@ -27,6 +27,8 @@ export interface StoredCart extends Omit<PricedCart, "state"> {
   readonly state: CartState;
   readonly version: number;
   readonly expiresAt: string;
+  // Set for channel cart_api: an agent sees only the carts its own key made.
+  readonly storeKeyId?: string | null;
 }
 
 // The storage the cart service needs. D1 below; a fake in tests (CQ-26).
@@ -82,6 +84,7 @@ export interface UpsertInput {
   readonly items: readonly CartItemInput[];
   readonly channel: CartChannel;
   readonly actor: Extract<Actor, "buyer" | "agent">;
+  readonly storeKeyId?: string;
 }
 
 // update_cart and Cart API PUT: the list replaces the cart; amounts come from stored prices only (INV-01).
@@ -106,11 +109,11 @@ export async function upsertCart(deps: CartDeps, input: UpsertInput): Promise<Re
   const expiresAt = new Date(now.getTime() + CART_TTL_MS).toISOString();
 
   if (plan.kind === "create") {
-    const cart: StoredCart = { ...priced, id: newCartId(deps.ids), storeId: store.id, channel: input.channel, version: 1, expiresAt };
+    const cart: StoredCart = { ...priced, id: newCartId(deps.ids), storeId: store.id, channel: input.channel, version: 1, expiresAt, storeKeyId: input.storeKeyId ?? null };
     await deps.repo.insert(cart, input.items, stamp);
     return ok({ cart, store });
   }
-  const cart: StoredCart = { ...priced, id: plan.cart.id, storeId: store.id, channel: plan.cart.channel, version: plan.cart.version + 1, expiresAt };
+  const cart: StoredCart = { ...priced, id: plan.cart.id, storeId: store.id, channel: plan.cart.channel, version: plan.cart.version + 1, expiresAt, storeKeyId: plan.cart.storeKeyId ?? null };
   const written = await deps.repo.replace(cart, plan.cart.version, input.items, stamp);
   return written ? ok({ cart, store }) : err(domainError("cart.version_conflict"));
 }
@@ -139,7 +142,7 @@ const issueSchema = z.object({ code: z.enum(["OUT_OF_STOCK", "PRICE_CHANGED", "U
 
 interface CartRow {
   id: string; store_id: string; channel: CartChannel; lines_json: string; validation_issues_json: string;
-  subtotal_cents: number; shipping_cents: number; total_cents: number; state: CartState; version: number; expires_at: string;
+  subtotal_cents: number; shipping_cents: number; total_cents: number; state: CartState; version: number; expires_at: string; store_key_id: string | null;
 }
 
 function rowToCart(r: CartRow): StoredCart {
@@ -148,7 +151,7 @@ function rowToCart(r: CartRow): StoredCart {
   return {
     id: r.id as CartId, storeId: asStoreId(r.store_id), channel: r.channel, lines, issues,
     subtotalCents: cents(r.subtotal_cents), shippingCents: cents(r.shipping_cents), totalCents: cents(r.total_cents),
-    state: r.state, version: r.version, expiresAt: r.expires_at,
+    state: r.state, version: r.version, expiresAt: r.expires_at, storeKeyId: r.store_key_id,
   };
 }
 
@@ -186,10 +189,10 @@ export function d1CartRepo(db: D1Database): CartRepo {
     async insert(c, items, now) {
       await db
         .prepare(
-          `INSERT INTO carts (id, store_id, channel, items_json, lines_json, subtotal_cents, shipping_cents, total_cents, validation_issues_json, state, version, expires_at, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO carts (id, store_id, channel, items_json, lines_json, subtotal_cents, shipping_cents, total_cents, validation_issues_json, state, version, store_key_id, expires_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind(c.id, c.storeId, c.channel, JSON.stringify(items), JSON.stringify(c.lines), c.subtotalCents, c.shippingCents, c.totalCents, JSON.stringify(c.issues), c.state, c.version, c.expiresAt, now, now)
+        .bind(c.id, c.storeId, c.channel, JSON.stringify(items), JSON.stringify(c.lines), c.subtotalCents, c.shippingCents, c.totalCents, JSON.stringify(c.issues), c.state, c.version, c.storeKeyId ?? null, c.expiresAt, now, now)
         .run();
     },
     async replace(c, expectedVersion, items, now) {

@@ -44,6 +44,8 @@ export interface OrderRepo {
   // T-ORD-05 for a full refund, and T-RFD-04 for its Approved request, only from Captured or Shipped.
   markRefunded(order: OrderRow, eventId: string, now: string): Promise<boolean>;
   byPayPalId(id: PayPalOrderId): Promise<(OrderRow & { readonly createdAt: string }) | null>;
+  // The PayPal capture id of a captured order, for the Cart API answer.
+  captureIdOf?(orderId: string): Promise<string | null>;
   // Orders still Created or Approved whose last change is older than `before` (SYS-PAY-09).
   listStale(before: string, limit: number): Promise<readonly (OrderRow & { readonly createdAt: string })[]>;
   // T-CRT-06: carts past their expiry that hold no live order. Returns how many moved.
@@ -307,6 +309,9 @@ export function d1OrderRepo(db: D1Database): OrderRepo {
     async byPayPalId(id) {
       const r = await db.prepare(`SELECT ${ORDER_COLS}, created_at FROM orders WHERE paypal_order_id = ?`).bind(id).first<OrderDbRow & { created_at: string }>();
       return r ? { ...rowToOrder(r), createdAt: r.created_at } : null;
+    },
+    async captureIdOf(orderId) {
+      return (await db.prepare("SELECT capture_id FROM orders WHERE id = ?").bind(orderId).first<{ capture_id: string | null }>())?.capture_id ?? null;
     },
     async listStale(before, limit) {
       const { results } = await db

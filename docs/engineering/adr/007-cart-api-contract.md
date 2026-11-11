@@ -15,5 +15,8 @@
 4. Test with a contract script that plays an agent. Check shapes against PayPal's published Postman collection where available.
 5. The README says "compatible with the Cart API v1 contract" and never "Store Sync enabled".
 
+## Amendment, 11 Nov 2026 (DoD-06)
+Point 3 is narrowed for R1. `POST` and `PUT` price and validate the cart only. The first `POST /checkout` with an empty body creates the PayPal order through the same `startCheckout` as the MCP tool, and answers `paypal_order_id` and `approve_url` (the Shelf Pay page). `POST /checkout` with `paypal_order_id` captures, or answers 422 `checkout.not_approved`. A cart that is checking out refuses `PUT` with 422. Why: one PayPal order per cart version would leave orphan orders, and one checkout path is tested once. An agent sees only the carts its own key made. `scripts/cart_agent.mjs` plays the agent against a live URL.
+
 ## Consequences
 - If Shelf later gets Store Sync access, only `verifyCartCaller` and the store registration change.
