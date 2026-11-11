@@ -18,6 +18,7 @@
 
 | Task | Title | State | Evidence |
 | --- | --- | --- | --- |
+| 11 Nov 12:40 | Claude | T-09: show_product and update_cart over a CartRepo port (D1 + optimistic version); error text table checked against api/error-codes.yaml |
 | 11 Nov 12:20 | Claude | T-05: Storefront resource, `search_products` over a Catalog port (D1), hello Storefront calling a tool, TC-MCP-01 |
 | 11 Nov 12:10 | Claude | T-04: Vertex client and extraction schema in `src/server/model/`; contract tests run in `pnpm check` |
 | 11 Nov 12:05 | Claude | T-03: PayPal client in `src/server/paypal/` (http, orders, refunds, webhooks) with 11 unit tests |

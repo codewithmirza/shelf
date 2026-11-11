@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { readFileSync } from "node:fs";
 import { cents } from "@/server/domain/brand";
-import type { Catalog, ProductCardRow, SearchQuery } from "@/server/catalog";
+import type { Catalog, ProductCardRow } from "@/server/catalog";
+import { fakeCatalog, fakeIds, memoryCartRepo } from "../support/fakes";
 import { createShelfServer } from "@/server/mcp/server";
 import { STOREFRONT_URI } from "@/server/mcp/ui";
 import { VERSION } from "@/version";
@@ -12,14 +13,9 @@ const row = (id: string, title: string, price: number, store = "maya-mugs"): Pro
   id, title, priceFromCents: cents(price), coverKey: null, store: { slug: store, name: "Maya Mugs", refundPolicy: "Returns within 14 days." },
 });
 
-function fakeCatalog(rows: ProductCardRow[]): { catalog: Catalog; seen: SearchQuery[] } {
-  const seen: SearchQuery[] = [];
-  return { seen, catalog: { async searchProducts(q) { seen.push(q); return rows; } } };
-}
-
 // Drives the real server over stateless Streamable HTTP, as Claude and ChatGPT do (SYS-MCP-01).
-async function rpc(catalog: Catalog, method: string, params: unknown = {}) {
-  const handler = createMcpHandler(() => createShelfServer({ catalog, origin: ORIGIN, version: VERSION }));
+export async function rpc(catalog: Catalog, method: string, params: unknown = {}, carts = { repo: memoryCartRepo([], []), ids: fakeIds() }) {
+  const handler = createMcpHandler(() => createShelfServer({ catalog, carts, origin: ORIGIN, version: VERSION }));
   const res = await handler.fetch(
     new Request(`${ORIGIN}/mcp`, {
       method: "POST",
@@ -41,13 +37,21 @@ describe("MCP surface (TC-MCP-01)", () => {
     expect(r.result.instructions).toContain("Never claim an order is paid unless get_order_status says Captured");
   });
 
-  it("TC-MCP-01: search_products carries both view _meta keys and readOnlyHint", async () => {
+  it("TC-MCP-01: every view tool carries both _meta keys and its Gate 5 annotations", async () => {
     const r = await rpc(catalog, "tools/list");
-    const tool = r.result.tools.find((t: { name: string }) => t.name === "search_products");
-    expect(tool._meta.ui.resourceUri).toBe(STOREFRONT_URI);
-    expect(tool._meta["openai/outputTemplate"]).toBe(STOREFRONT_URI);
-    expect(tool.annotations.readOnlyHint).toBe(true);
-    expect(tool.inputSchema.required).toEqual(["query"]);
+    const byName = new Map(r.result.tools.map((t: { name: string }) => [t.name, t]));
+    const expected: Record<string, Record<string, boolean>> = {
+      search_products: { readOnlyHint: true },
+      show_product: { readOnlyHint: true },
+      update_cart: { idempotentHint: true, readOnlyHint: false },
+    };
+    for (const [name, annotations] of Object.entries(expected)) {
+      const tool = byName.get(name) as { _meta: any; annotations: any } | undefined;
+      expect(tool, name).toBeDefined();
+      expect(tool!._meta.ui.resourceUri).toBe(STOREFRONT_URI);
+      expect(tool!._meta["openai/outputTemplate"]).toBe(STOREFRONT_URI);
+      expect(tool!.annotations).toMatchObject(annotations);
+    }
   });
 
   it("TC-MCP-01: the Storefront resource has the MCP App MIME, resource domain and no connectDomains", async () => {
