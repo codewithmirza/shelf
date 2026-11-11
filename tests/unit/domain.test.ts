@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cents, parseCartId, storeId, variantId, type VariantId } from "@/server/domain/brand";
 import { newCartId, ulid, type IdSource } from "@/server/domain/ids";
 import { requestKeys } from "@/server/domain/keys";
-import type { Actor } from "@/server/domain/machine";
+import type { Actor, Machine } from "@/server/domain/machine";
 import { cartMachine, orderMachine, productMachine, refundMachine } from "@/server/domain/machines";
 import { formatUsd, parseMoneyValue, toMoney } from "@/server/domain/money";
 import { parseCartInput, priceCart, type VariantForPricing } from "@/server/domain/cart";
@@ -18,7 +18,9 @@ const fixedSource = (seed = 7, at = "2026-11-11T00:00:00Z"): IdSource => ({
 });
 
 describe("state machines (CQ-34: every move, allowed and refused)", () => {
-  for (const machine of [productMachine, cartMachine, orderMachine, refundMachine]) {
+  // Widened to Machine<string> so one loop covers all four tables.
+  const machines = [productMachine, cartMachine, orderMachine, refundMachine] as readonly Machine<string>[];
+  for (const machine of machines) {
     it(`${machine.name} allows exactly the moves in its table`, () => {
       for (const from of machine.states) for (const to of machine.states) for (const actor of ACTORS) {
         const inTable = machine.transitions.some((t) => t.to === to && t.from.includes(from) && t.by.includes(actor));
