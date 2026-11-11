@@ -72,7 +72,7 @@ The longest chain is T-01 → T-02 → T-08 → T-09 → T-10 → T-11 → T-18 
 | DoD-04 | The task's `done` sentence is true, and spike tasks have an evidence file. |
 | DoD-05 | CI is green. |
 | DoD-06 | A contract that the task found wrong has a change request (`AGENTS.md`). |
-| DoD-07 | The code follows `code-quality.md` (CQ-01 to CQ-20); every machine in it is explicit (CQ-01, CQ-02). |
+| DoD-07 | The code follows `code-quality.md` (CQ-01 to CQ-34); every machine in it is explicit (CQ-01, CQ-02). |
 
 ## Cut order
 

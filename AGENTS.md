@@ -30,7 +30,7 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 ## Hard rules
 
 1. **One lockfile:** `pnpm-lock.yaml` at the root.
-2. **Pinned versions:** `next >=16.2.11 <16.3`, `@opennextjs/cloudflare ^1.20`, `@modelcontextprotocol/server 2.3.1` exactly (Gate 3, "Stack"). Do not upgrade without an ADR.
+2. **Pinned versions:** `next 16.4.6`, `@opennextjs/cloudflare 1.20.16`, `agents 0.33.0`, `@modelcontextprotocol/server 2.4.0`, `@modelcontextprotocol/ext-apps 2.0.4`, `typescript 5.9` (Gate 3, "Stack"; ADR-011). Do not upgrade without an ADR.
 3. **One PayPal caller:** only `src/server/paypal/` calls PayPal. **One model caller:** only `src/server/model/` calls Vertex.
 4. **One cart implementation:** the MCP tools, the Cart API and the Try page call the same functions in `src/server/`.
 5. **Server totals only:** never use an amount from a request (INV-01).
@@ -42,7 +42,8 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 11. **No fake data shown as real.** Demo stores are marked as demo. Never claim an unmeasured number.
 12. **No duplicate.** Search before you add a helper or a type.
 13. **No implicit state machines.** Anything with more than two states has one `state` field typed as a union and one transition table; never a mix of booleans, nullable fields or timestamps (CQ-01).
-14. **Follow the code quality rules** in `docs/engineering/code-quality.md` (CQ-01 to CQ-20). A reviewer rejects with the rule ID.
+14. **Follow the code quality rules** in `docs/engineering/code-quality.md` (CQ-01 to CQ-34): frontend rules from Emil Kowalski, backend and API rules from Brandur Leach and Alexis King. A reviewer rejects with the rule ID.
+15. **Record progress.** After each step, update `docs/engineering/PROGRESS.md`, commit and push. Work can stop at any moment; the next agent resumes from that file.
 
 ## How you work on a task
 

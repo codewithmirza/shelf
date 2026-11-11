@@ -6,7 +6,7 @@
 
 ## Context
 - The founder wants frontend and backend in one Worker (C-5).
-- `@opennextjs/cloudflare@1.20` supports Next.js `>=16.2.11` in 16.2 and needs the Node runtime. Open issues report problems with `proxy.ts` (#1277) and `cacheComponents` (#1130).
+- `@opennextjs/cloudflare@1.20.16` declares Next.js `>=16.4.5` and needs the Node runtime (ADR-011 replaces the 16.2 pin of 10 Nov). Open issues report problems with `proxy.ts` (#1277) and `cacheComponents` (#1130).
 - The Workers Free plan allows 10 ms CPU per request and a 3 MiB gzip bundle. Paid allows 30 s CPU (up to 5 min) and 10 MiB.
 - OpenNext documents a custom Worker entry that wraps `.open-next/worker.js`.
 

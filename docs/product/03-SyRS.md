@@ -157,7 +157,7 @@ Status: written 10 Nov 2026. Sources: `02-PRD.md`, and constraints C-1 to C-6 fr
 >
 > **Why it comes here.** A constraint removes options before architecture starts.
 >
-> **Shelf example.** CON-03 pins Next.js to 16.2.11 or later in 16.2, because the Cloudflare adapter declares that range.
+> **Shelf example.** CON-03 pins Next.js to 16.4.6, because the Cloudflare adapter declares `>=16.4.5`.
 >
 > **What it produces.** CON-01 to CON-06.
 
@@ -165,7 +165,7 @@ Status: written 10 Nov 2026. Sources: `02-PRD.md`, and constraints C-1 to C-6 fr
 | --- | --- | --- |
 | CON-01 | Cloudflare Workers for the frontend and the backend, as one Worker. | C-5 |
 | CON-02 | Gemini on Vertex AI, model `gemini-3.8-flash`. | C-5 |
-| CON-03 | Next.js `>=16.2.11 <16.3` with `@opennextjs/cloudflare` `^1.20`, Node runtime only. | Adapter peer range, 10 Nov 2026 |
+| CON-03 | Next.js `16.4.6` with `@opennextjs/cloudflare` `1.20.16`, Node runtime only. | Adapter peer range, 11 Nov 2026 (ADR-011) |
 | CON-04 | USD only; US sandbox accounts. | C-4, C-6 |
 | CON-05 | MIT license, public repository at submission. | C-2 |
 | CON-06 | Submit by 12 Nov 2026, 12:00 PT. | C-1 |

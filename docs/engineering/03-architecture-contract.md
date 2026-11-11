@@ -71,17 +71,17 @@ flowchart TB
 >
 > **Why it comes here.** An agent must not pick versions. A wrong Next.js minor breaks the Cloudflare adapter.
 >
-> **Shelf example.** `next` is pinned to `>=16.2.11 <16.3` because `@opennextjs/cloudflare@1.20` declares that peer range and 16.3 support is an open question.
+> **Shelf example.** `next` is pinned to `16.4.6` because `@opennextjs/cloudflare@1.20.16` declares the peer range `>=16.4.5` (read 11 Nov 2026, ADR-011).
 >
 > **What it produces.** The stack table. Versions were read on 10 Nov 2026; the lockfile is the authority after task T-01.
 
 | Layer | Choice | Version | Why | ADR |
 | --- | --- | --- | --- | --- |
 | Runtime | Cloudflare Workers, Paid plan | `compatibility_date` 2026-11-01, `nodejs_compat` | Free plan has 10 ms CPU per request and a 3 MiB bundle limit. | 001 |
-| Web | Next.js App Router, React 19.2, Node runtime only | `next >=16.2.11 <16.3` | Adapter peer range. No Edge runtime, no `proxy.ts`, no `cacheComponents`. | 001 |
+| Web | Next.js App Router, React 19.2, Node runtime only | `next 16.4.6` (ADR-011) | Adapter peer range. No Edge runtime, no `proxy.ts`, no `cacheComponents`. | 001 |
 | Adapter | `@opennextjs/cloudflare`, `wrangler` | `^1.20`, `^4` | The official path for Next.js on Workers. | 001 |
-| MCP | `agents` (`createMcpHandler`), `@modelcontextprotocol/server`, `zod` | `>=0.20`, `2.3.1` exact, `^4` | Stateless MCP over Streamable HTTP. `McpAgent` is deprecated. | 002 |
-| MCP UI | `@modelcontextprotocol/ext-apps` | latest 1.x at T-01 | MCP Apps resource and tool helpers; the `App` class in the Storefront. | 009 |
+| MCP | `agents` (`createMcpHandler`), `@modelcontextprotocol/server`, `zod` | `0.33.0`, `2.4.0` exact (the `agents` peer), `^4` | Stateless MCP over Streamable HTTP. `McpAgent` is deprecated. | 002 |
+| MCP UI | `@modelcontextprotocol/ext-apps` (`/server` for tools and resources, `/app-bridge` for the Try page host) | `2.0.4` | MCP Apps resource and tool helpers; the `App` class in the Storefront. | 009 |
 | Storefront build | Vite, React, `vite-plugin-singlefile` | Vite `^7` | The resource must be one HTML document. | 009 |
 | Data | D1 with Drizzle ORM | `drizzle-orm`, `drizzle-kit` latest | Relational data at small scale, in Cloudflare. | 003 |
 | Files | R2 bucket `shelf-photos` | — | Photos. | 003 |

@@ -2,7 +2,7 @@
 
 **Status.** Proposed, 10 Nov 2026.
 
-**In one line.** The `agents` package's `createMcpHandler` serves one `McpServer` from `@modelcontextprotocol/server@2.3.1` over Streamable HTTP at `/mcp`, with no session store.
+**In one line.** The `agents` package's `createMcpHandler` serves one `McpServer` from `@modelcontextprotocol/server@2.4.0` over Streamable HTTP at `/mcp`, with no session store.
 
 ## Context
 - Agents SDK v0.20.0 (27 Jul 2026) supports MCP spec 2026-07-28 and SDK v2. `McpAgent` is "deprecated and feature-frozen".
@@ -20,7 +20,7 @@
 1. Build the server in `src/server/mcp/server.ts` with a factory `createShelfServer(env)`. Register tools with zod schemas and the Storefront resource.
 2. `src/worker.ts` calls `createMcpHandler(createShelfServer, { route: "/mcp", allowedHostnames })`.
 3. No authentication on `/mcp` in R1. Buyer data is protected by order tokens (THR-06).
-4. Pin `@modelcontextprotocol/server` to `2.3.1` exactly.
+4. Pin `@modelcontextprotocol/server` to `2.4.0` exactly, the version `agents@0.33.0` declares as its peer (ADR-011).
 
 ## Consequences
 - If `ext-apps` server helpers do not accept an SDK v2 `McpServer`, set `_meta` and the resource by hand (SPK-02).
