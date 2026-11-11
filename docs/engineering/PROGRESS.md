@@ -18,16 +18,14 @@
 
 | Task | Title | State | Evidence |
 | --- | --- | --- | --- |
-| 11 Nov 12:40 | Claude | T-09: show_product and update_cart over a CartRepo port (D1 + optimistic version); error text table checked against api/error-codes.yaml |
-| 11 Nov 12:20 | Claude | T-05: Storefront resource, `search_products` over a Catalog port (D1), hello Storefront calling a tool, TC-MCP-01 |
-| 11 Nov 12:10 | Claude | T-04: Vertex client and extraction schema in `src/server/model/`; contract tests run in `pnpm check` |
-| 11 Nov 12:05 | Claude | T-03: PayPal client in `src/server/paypal/` (http, orders, refunds, webhooks) with 11 unit tests |
 | T-01 | Scaffold the repository and the one-Worker entry | Done (deploy waits for S-02) | `evidence/SPK-01.md` |
 | T-02 | D1 migration, Drizzle schema, seed loader | Done (remote apply waits for S-02) | `pnpm db:check`: schema match, 14 tables; seed applied to local D1 |
-| T-04 | Vertex client and extraction schema | Done (offline) | `pnpm check`: 42 tests; TC-AI-01 with a hand-written fixture answer; retry-once on schema break; live SPK-04 waits for S-03 (evidence/SPK-04.md) |
-| T-05 | MCP server and Storefront resource | Done (local) | Worker answers `search_products` from local D1; TC-MCP-01 in CI; host screenshots wait for S-02, S-08 (evidence/SPK-02.md). `search_products` pulled forward from T-09 as the one tool |
-| T-08 | Domain rules | Done | `pnpm test`: 22 tests; every move of the 4 machines checked; TC-PAY-02, TC-PAY-06, TC-CART-04 |
-| T-03 | PayPal REST client (code and unit tests; live sandbox waits for S-04) | Done (unit) | `pnpm check`: 33 tests; same PayPal-Request-Id on retry, no 4xx retry, timeout mapped, shapes parsed. Live TC-PAY-01 waits for S-04 |
+| T-03 | PayPal REST client | Done (unit) | 11 unit tests: same PayPal-Request-Id on retry, no 4xx retry, timeout mapped, shapes parsed. Live TC-PAY-01 waits for S-04 |
+| T-04 | Vertex client and extraction schema | Done (offline) | TC-AI-01 with a hand-written fixture answer; retry once on schema break. Live SPK-04 waits for S-03 (`evidence/SPK-04.md`) |
+| T-05 | MCP server and Storefront resource | Done (local) | Local Worker answers from D1; TC-MCP-01 in CI. Host screenshots wait for S-02, S-08 (`evidence/SPK-02.md`) |
+| T-08 | Domain rules | Done | Every move of the 4 machines checked; TC-PAY-02, TC-PAY-06, TC-CART-04 |
+| T-09 | search_products, show_product, update_cart | Done | TC-MCP-01, TC-MCP-03, TC-CART-02; every cart state planned (CQ-34); checked on the local Worker with seeded D1 |
+| T-10 | start_checkout and the Pay page | Next | Code and unit tests first; the live sandbox run waits for S-04 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -47,6 +45,10 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 12:40 | Claude | T-09: show_product and update_cart over a CartRepo port (D1 + optimistic version); error text table checked against api/error-codes.yaml |
+| 11 Nov 12:20 | Claude | T-05: Storefront resource, `search_products` over a Catalog port (D1), hello Storefront calling a tool, TC-MCP-01 |
+| 11 Nov 12:10 | Claude | T-04: Vertex client and extraction schema in `src/server/model/`; contract tests run in `pnpm check` |
+| 11 Nov 12:05 | Claude | T-03: PayPal client in `src/server/paypal/` (http, orders, refunds, webhooks) with 11 unit tests |
 | 11 Nov 08:05 | Claude | T-08: explicit state machines (SM-PRD, SM-CRT, SM-ORD, SM-RFD), branded money and IDs, server-side cart pricing, refund and publish rules, idempotency keys. 22 tests pass; typecheck clean. |
 | 11 Nov 07:35 | Claude | T-02: Drizzle schema matches the migration (new `pnpm db:check`). Fixed nullable TEXT primary keys in 0001 before any apply. Seed: 2 demo stores, 6 products, 7 variants. |
 | 11 Nov 07:10 | Claude | T-01: scaffold, one Worker serves Next.js and /mcp; SPK-01 passes locally (972 KiB gzip). |
