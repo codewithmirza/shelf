@@ -68,7 +68,7 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
       signal: AbortSignal.timeout(10_000),
     }).catch(() => null);
     // PayPal's error name (for example invalid_token or INSUFFICIENT_SCOPE) is not personal data; keep it for the log.
-    const errName = res && !res.ok ? await res.clone().json().then((b: { error?: string; name?: string }) => b.error ?? b.name ?? "", () => "") : "";
+    const errName = res && !res.ok ? await res.clone().json().then((b: unknown) => { const e = b as { error?: string; name?: string } | null; return e?.error ?? e?.name ?? ""; }, () => "") : "";
     statuses.push(`${res?.status ?? "network"}${errName ? `:${errName}` : ""}`);
     if (res?.ok) {
       const who = identityFrom(await res.json().catch(() => null));
