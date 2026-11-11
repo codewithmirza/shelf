@@ -1,0 +1,148 @@
+/* Shelf design tokens. Source of truth for every colour, type size, space, radius and duration (AGENTS.md rule 9).
+   Task T-29 copies this file to src/styles/tokens.css and storefront/src/tokens.css. Edit it here only. */
+
+:root {
+  /* Neutrals: a calm shelf, so the seller's photos and the PayPal button carry the colour. */
+  --color-background: #F7F7F5;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #EFEFEC;
+  --color-ink: #111110;
+  --color-ink-secondary: #4A4946;
+  --color-ink-tertiary: #6E6C67;
+  --color-line: #E6E5E1;
+  --color-line-strong: #D2D0CB;
+  --color-on-ink: #F7F7F5;
+
+  /* State colours. Each one always comes with a word and an icon (XR-02). Never use them for decoration. */
+  --color-paid: #1F7A4C;
+  --color-paid-surface: #E8F3EC;
+  --color-wait: #9A5B0A;
+  --color-wait-surface: #FBF0DF;
+  --color-danger: #B42318;
+  --color-danger-surface: #FCECEA;
+  --color-suggested: #4A4946;
+
+  --color-focus: #111110;
+  --shadow-sheet: 0 -1px 0 var(--color-line), 0 -12px 32px rgb(17 17 16 / 0.08);
+  --shadow-pop: 0 1px 2px rgb(17 17 16 / 0.06), 0 8px 24px rgb(17 17 16 / 0.08);
+
+  /* Type. Geist for the web app; the Storefront uses the system stack so it feels native in each host. */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-storefront: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --text-12: 0.75rem;   /* meta, timestamps */
+  --text-13: 0.8125rem; /* labels, status */
+  --text-15: 0.9375rem; /* body in dense UI, Storefront body */
+  --text-17: 1.0625rem; /* body */
+  --text-20: 1.25rem;   /* card title, price on product */
+  --text-24: 1.5rem;    /* screen title */
+  --text-32: 2rem;      /* page title */
+  --text-44: 2.75rem;   /* landing headline only */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-body: 1.5;
+  --tracking-display: -0.02em; /* 24 px and up only */
+  --tracking-label: 0.01em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Space on a 4 px grid. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-18: 72px;
+
+  /* Radius: controls are crisp, photos and cards are soft, nothing is a pill except a status dot. */
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-sheet: 14px;
+  --radius-round: 999px;
+
+  /* Touch target and layout. */
+  --size-touch: 44px;
+  --size-control: 40px;
+  --width-reading: 65ch;
+  --width-app: 480px;   /* Seller app column on desktop */
+  --width-page: 1080px;
+
+  /* Motion (Emil Kowalski's standards): strong ease-out, short, interruptible transitions. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-press: 140ms;
+  --duration-hover: 150ms;
+  --duration-small: 180ms;   /* tooltips, small popovers, status change */
+  --duration-menu: 220ms;    /* selects, menus */
+  --duration-sheet: 300ms;   /* bottom sheets, drawers */
+  --duration-moment: 420ms;  /* the Paid moment only: rare, so it may be slower */
+  --scale-press: 0.97;
+  --scale-enter: 0.96;
+  --stagger: 40ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #0E0E0D;
+    --color-surface: #171716;
+    --color-surface-sunken: #1F1F1D;
+    --color-ink: #F3F2EF;
+    --color-ink-secondary: #B9B7B1;
+    --color-ink-tertiary: #8C8A84;
+    --color-line: #262624;
+    --color-line-strong: #34332F;
+    --color-on-ink: #111110;
+    --color-paid: #4CC08A;
+    --color-paid-surface: #12291D;
+    --color-wait: #E3A33B;
+    --color-wait-surface: #2B200E;
+    --color-danger: #F97066;
+    --color-danger-surface: #2D1311;
+    --color-suggested: #B9B7B1;
+    --color-focus: #F3F2EF;
+    --shadow-sheet: 0 -1px 0 var(--color-line), 0 -12px 32px rgb(0 0 0 / 0.4);
+    --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-background: #0E0E0D;
+  --color-surface: #171716;
+  --color-surface-sunken: #1F1F1D;
+  --color-ink: #F3F2EF;
+  --color-ink-secondary: #B9B7B1;
+  --color-ink-tertiary: #8C8A84;
+  --color-line: #262624;
+  --color-line-strong: #34332F;
+  --color-on-ink: #111110;
+  --color-paid: #4CC08A;
+  --color-paid-surface: #12291D;
+  --color-wait: #E3A33B;
+  --color-wait-surface: #2B200E;
+  --color-danger: #F97066;
+  --color-danger-surface: #2D1311;
+  --color-suggested: #B9B7B1;
+  --color-focus: #F3F2EF;
+  --shadow-sheet: 0 -1px 0 var(--color-line), 0 -12px 32px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+/* Reduced motion keeps opacity and colour changes that explain state, and removes movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --scale-press: 1;
+    --scale-enter: 1;
+    --stagger: 0ms;
+  }
+}
