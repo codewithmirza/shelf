@@ -28,7 +28,9 @@
 | T-10 | start_checkout, Pay page, capture, signed tokens | Done (local) | TC-PAY-01 (unit), TC-PAY-03, TC-SEC-02; Pay page rendered locally (`evidence/SPK-03.md`). Live sandbox pay waits for S-04, S-05. T-06 spike folded in |
 | T-11 | Webhooks and the reconciler | Done | TC-PAY-04, TC-PAY-09 on fakes and on real SQLite with the migration (tests/support/d1.ts). Live webhook waits for S-07 |
 | T-12 | get_order_status and request_refund | Done | TC-MCP-04, TC-MCP-05, TC-SEC-02 over MCP on real SQLite; INV-06 held by the unique index |
-| T-13 | Storefront views from the design system | Next | — |
+| T-13 | Storefront views from the design system | Done | Five views + error, built to Figma S1 to S12; explicit state machine (tests/unit/storefront_machine.test.ts); checked in a host bridge: search, product, cart, Pay; order views and the Paid moment with polling in a fixture host (out of repo). 483 KB single file |
+| T-14 | MCP host allow list and rate limit | Next | — |
+| T-22 | Try page | In progress | Search-box host done and checked locally; Gemini chat waits for S-03 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -48,6 +50,8 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:28 | Claude | T-22 started with T-13. |
+| 11 Nov 11:28 | Claude | T-13: Storefront views (results, product, cart, checkout with open-link and 3 s polling, order, refund ask), Paid moment, host theme. T-22 part: Try page hosts the Storefront through AppBridge with the search box (ADR-010); Gemini chat waits for S-03. |
 | 11 Nov 11:18 | Claude | T-12: order status read model (no email, address or PayPal ids), buyer timeline text, refund request that returns the first pending one. |
 | 11 Nov 11:17 | Claude | T-11: verified webhooks apply PayPal's truth through one syncFromPayPal shared with the 5-minute reconciler (CQ-31); approved-but-uncaptured orders are captured; unpaid orders cancel after 3 h; idle carts expire. D1 adapters now run their real SQL in CI. D1 shelf and R2 shelf-photos created; database_id set. |
 | 11 Nov 11:40 | Claude | T-10: start_checkout in 3 phases (CQ-28), guarded capture batch, HMAC pay and order tokens, Pay page with an explicit state machine, PayPal redirect fallback. Added `build:worker` (OpenNext calls `build`, so `build` stays `next build`). New secret: `TOKEN_SECRET`. |

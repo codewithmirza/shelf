@@ -15,6 +15,9 @@ export interface ShelfEnv {
   readonly GCP_LOCATION: string;
   readonly SESSION_SECRET: string;
   readonly TOKEN_SECRET: string;
+  // Sandbox buyer shown on the Try page (test-only credentials).
+  readonly TRY_BUYER_EMAIL?: string;
+  readonly TRY_BUYER_PASSWORD?: string;
   readonly PUBLIC_ORIGIN: string;
 }
 
