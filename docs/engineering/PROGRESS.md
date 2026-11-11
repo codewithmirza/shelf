@@ -36,7 +36,7 @@
 | T-22 | Try page Gemini chat (waits for S-03) | Next | — |
 | T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
 | T-25 | CI and check scripts | Done | pnpm check = types, 179 tests, schema, traceability (27 of 32 test cases named; 5 are live/E2E/manual), secret scan; same steps in CI |
-| T-26 | Live sandbox run and independent review | Next | — |
+| T-26 | Live sandbox run and review | In progress | Money-path review done: fixed webhook verification (original body) and MCP limit. Live payment, sign-in round trip, webhook delivery and Claude rendering wait for a real seller store (founder) and S-03 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -56,6 +56,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:55 | Claude | Review pass: two fixes pushed. Waiting on: Log in with PayPal enabled on the sandbox app, a first real store, TRY_BUYER_* vars, Vertex (S-03), the Claude connector (S-08). |
 | 11 Nov 11:54 | Claude | T-25: traceability and secret checks; TC-AI-03 added. T-27 part: README is the judge guide with the verified and not verified table. |
 | 11 Nov 11:53 | Claude | T-24: landing and store pages. Positioning widened from Claude and ChatGPT to AI assistants: the app renders where MCP Apps are supported, the tools work in any MCP client, the Cart API in any agent. |
 | 11 Nov 11:48 | Claude | T-21: Cart API v1 routes behind verifyCartCaller (store key hash), carts bound to their key, checkout through startCheckout, agent script. |
