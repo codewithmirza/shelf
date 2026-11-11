@@ -101,6 +101,14 @@ describe("Extraction (TC-AI-01)", () => {
     expect(endpoint(deps([]).d)).toBe("https://gateway.ai.cloudflare.com/v1/acc/shelf/google-vertex-ai/v1/projects/proj/locations/global/publishers/google/models/gemini-3.8-flash:generateContent");
   });
 
+  it("an Agent Platform API key calls Vertex directly with x-goog-api-key", async () => {
+    const seen: { url: string; headers: Headers }[] = [];
+    const d: VertexDeps = { mode: "api_key", apiKey: "KEY", fetch: async (url, init) => { seen.push({ url: String(url), headers: new Headers(init?.headers) }); return new Response(mugAnswer, { status: 200 }); } };
+    expect((await extractProduct(d, photo)).ok).toBe(true);
+    expect(seen[0]!.url).toBe("https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.8-flash:generateContent");
+    expect([seen[0]!.headers.get("x-goog-api-key"), seen[0]!.headers.get("cf-aig-authorization")]).toEqual(["KEY", null]);
+  });
+
   const live = process.env.SHELF_LIVE_VERTEX === "1";
   it.runIf(live)("SPK-04 live: five photos give schema-valid answers in under 15 s each", async () => {
     const env = process.env;

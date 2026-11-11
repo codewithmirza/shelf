@@ -23,7 +23,7 @@ export interface PayPalIdentity {
   readonly name: string;
 }
 
-const tokenSchema = z.object({ access_token: z.string().min(1) });
+const tokenSchema = z.object({ access_token: z.string().min(1), id_token: z.string().optional() });
 // Two userinfo schemas exist; read both (ADR-008 point 2).
 const userinfoSchema = z.object({
   user_id: z.string().optional(),
@@ -63,12 +63,37 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
   if (!tokenRes.ok || !token.success) return err({ ...domainError("auth.required", `token ${tokenRes.status} ${tokenBody?.error ?? ""}`.trim()), step: "token" });
   const statuses: string[] = [];
   for (const path of ["/v1/identity/oauth2/userinfo?schema=paypalv1.1", "/v1/identity/openidconnect/userinfo?schema=openid"]) {
-    const res = await deps.fetch(`${deps.baseUrl}${path}`, { headers: { authorization: `Bearer ${token.data.access_token}` }, signal: AbortSignal.timeout(10_000) }).catch(() => null);
+    const res = await deps.fetch(`${deps.baseUrl}${path}`, {
+      headers: { authorization: `Bearer ${token.data.access_token}`, "content-type": "application/json" },
+      signal: AbortSignal.timeout(10_000),
+    }).catch(() => null);
     statuses.push(String(res?.status ?? "network"));
     if (res?.ok) {
       const who = identityFrom(await res.json().catch(() => null));
-      return who.ok ? who : err({ ...who.error, step: "identity" });
+      if (who.ok) return who;
     }
   }
-  return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")}`), step: "userinfo" });
+  // The ID token came straight from PayPal's token endpoint over TLS, so its claims can be read without a
+  // signature check (OpenID Connect Core 3.1.3.7). PayPal puts the payer ID and email there for openid scopes.
+  const claims = token.data.id_token ? idTokenClaims(token.data.id_token) : null;
+  if (claims) {
+    const who = identityFrom({ payer_id: claims.payer_id, user_id: claims.sub, email: claims.email, name: claims.name });
+    if (who.ok) return who;
+  }
+  return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")}${token.data.id_token ? " idtoken-unusable" : " no-idtoken"}`), step: "userinfo" });
+}
+
+function idTokenClaims(jwt: string): { sub?: string; payer_id?: string; email?: string; name?: string } | null {
+  const part = jwt.split(".")[1];
+  if (!part) return null;
+  try {
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (part.length % 4)) % 4));
+    const c = JSON.parse(json) as Record<string, unknown>;
+    const str = (k: string) => (typeof c[k] === "string" ? (c[k] as string) : undefined);
+    const out: { sub?: string; payer_id?: string; email?: string; name?: string } = {};
+    for (const k of ["sub", "payer_id", "email", "name"] as const) { const v = str(k); if (v !== undefined) out[k] = v; }
+    return out;
+  } catch {
+    return null;
+  }
 }

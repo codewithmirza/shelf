@@ -6,6 +6,7 @@ PAYPAL_WEBHOOK_ID=""
 TOKEN_SECRET=""            # 32+ random characters: openssl rand -base64 48
 TRY_BUYER_EMAIL=""         # sandbox personal account shown on the Try page
 TRY_BUYER_PASSWORD=""
+VERTEX_API_KEY=""        # Agent Platform API key (or use the three AI Gateway values below)
 CF_ACCOUNT_ID=""
 CF_AIG_TOKEN=""
 GCP_PROJECT=""

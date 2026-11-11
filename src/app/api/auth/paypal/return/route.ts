@@ -24,7 +24,8 @@ export async function GET(request: Request) {
   if (!state || state !== readCookie(request, STATE_COOKIE)) { log("state", state ? "mismatch" : "missing"); return back("/app?signin=failed&why=state"); }
   if (!code) return back("/app?signin=cancelled");
   const who = await identityFromCode(depsFromEnv(env), code, `${env.PUBLIC_ORIGIN}/api/auth/paypal/return`);
-  if (!who.ok) { log(who.error.step, who.error.detail); return back(`/app?signin=failed&why=${who.error.step}`); }
+  // The short detail (HTTP statuses only) helps diagnose; it holds no token or personal data.
+  if (!who.ok) { log(who.error.step, who.error.detail); return back(`/app?signin=failed&why=${who.error.step}&d=${encodeURIComponent((who.error.detail ?? "").slice(0, 60))}`); }
   const { sessionId, sellerId } = await signIn(d1SessionRepo(env.DB), webIdSource, who.value);
   const store = await d1SellerStoreRepo(env.DB).bySeller(sellerId);
   return back(store ? "/app" : "/app/new-store", [cookie(SESSION_COOKIE, sessionId, SESSION_TTL_S)]);

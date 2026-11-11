@@ -43,6 +43,23 @@ describe("Log in with PayPal (TC-SEL-01)", () => {
     expect(calls).toEqual(["/v1/oauth2/token", "/v1/identity/oauth2/userinfo?schema=paypalv1.1", "/v1/identity/openidconnect/userinfo?schema=openid"]);
   });
 
+  it("when userinfo refuses, the ID token from the token answer identifies the seller", async () => {
+    const claims = btoa(JSON.stringify({ sub: "https://www.paypal.com/webapps/auth/identity/user/U1", payer_id: "ABCDEFGHJKLMN", email: "maya@seller.test" })).replace(/=+$/, "");
+    const deps: PayPalDeps = {
+      baseUrl: "https://api-m.sandbox.paypal.com", clientId: "CID", clientSecret: "SEC", sleep: async () => {},
+      fetch: async (input) => (String(input).endsWith("/v1/oauth2/token") ? Response.json({ access_token: "AT", id_token: `h.${claims}.s` }) : new Response("", { status: 401 })),
+    };
+    expect(await identityFromCode(deps, "C", "https://s.test/r")).toEqual({ ok: true, value: { accountId: "ABCDEFGHJKLMN", isPayerId: true, email: "maya@seller.test", name: "maya" } });
+  });
+
+  it("userinfo and ID token both unusable: the step and statuses are reported, nothing else", async () => {
+    const deps: PayPalDeps = {
+      baseUrl: "https://api-m.sandbox.paypal.com", clientId: "CID", clientSecret: "SEC", sleep: async () => {},
+      fetch: async (input) => (String(input).endsWith("/v1/oauth2/token") ? Response.json({ access_token: "AT" }) : new Response("", { status: 403 })),
+    };
+    expect(await identityFromCode(deps, "C", "https://s.test/r")).toMatchObject({ ok: false, error: { step: "userinfo", detail: "userinfo 403,403 no-idtoken" } });
+  });
+
   it("AC-SEL-01-01/02: sign-in stores the payee and a 7-day session; signing in again keeps one seller", async () => {
     const db = sqliteD1();
     const repo = d1SessionRepo(db);

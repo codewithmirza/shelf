@@ -8,21 +8,22 @@ import { EXTRACTION_JSON_SCHEMA, SYSTEM_INSTRUCTION, extractionSchema, toOutcome
 export const MODEL = "gemini-3.8-flash";
 export const TIMEOUT_MS = 15_000;
 
-export interface VertexDeps {
-  readonly fetch: typeof fetch;
-  readonly accountId: string;
-  readonly gateway: string;
-  readonly gatewayToken: string;
-  readonly project: string;
-  readonly location: string;
-}
+// Two ways to reach the model, both billed to the founders' GCP project:
+// an Agent Platform (Vertex AI) API key, called directly; or a service account held by Cloudflare AI Gateway (ADR-006).
+export type VertexDeps =
+  | { readonly fetch: typeof fetch; readonly mode: "api_key"; readonly apiKey: string }
+  | { readonly fetch: typeof fetch; readonly mode?: "gateway"; readonly accountId: string; readonly gateway: string; readonly gatewayToken: string; readonly project: string; readonly location: string };
 
 export function endpoint(d: VertexDeps): string {
+  if (d.mode === "api_key") return `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODEL}:generateContent`;
   return (
     `https://gateway.ai.cloudflare.com/v1/${d.accountId}/${d.gateway}/google-vertex-ai` +
     `/v1/projects/${d.project}/locations/${d.location}/publishers/google/models/${MODEL}:generateContent`
   );
 }
+
+export const authHeaders = (d: VertexDeps): Record<string, string> =>
+  d.mode === "api_key" ? { "x-goog-api-key": d.apiKey } : { "cf-aig-authorization": `Bearer ${d.gatewayToken}` };
 
 const responseSchema = z.object({
   candidates: z.array(z.object({ content: z.object({ parts: z.array(z.object({ text: z.string().optional() })) }).optional(), finishReason: z.string().optional() })).min(1),
@@ -49,7 +50,7 @@ async function attempt(d: VertexDeps, photo: PhotoInput): Promise<Result<Extract
   try {
     res = await d.fetch(endpoint(d), {
       method: "POST",
-      headers: { "content-type": "application/json", "cf-aig-authorization": `Bearer ${d.gatewayToken}` },
+      headers: { "content-type": "application/json", ...authHeaders(d) },
       body: JSON.stringify(requestBody(photo)),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -82,7 +83,8 @@ export async function extractProduct(d: VertexDeps, photo: PhotoInput): Promise<
   return err({ kind: "final", reason: `schema: ${second.error.detail}` });
 }
 
-export function depsFromEnv(env: { CF_ACCOUNT_ID: string; AIG_NAME: string; CF_AIG_TOKEN: string; GCP_PROJECT: string; GCP_LOCATION: string }): VertexDeps {
+export function depsFromEnv(env: { VERTEX_API_KEY?: string; CF_ACCOUNT_ID: string; AIG_NAME: string; CF_AIG_TOKEN: string; GCP_PROJECT: string; GCP_LOCATION: string }): VertexDeps {
+  if (env.VERTEX_API_KEY) return { fetch: (input, init) => fetch(input, init), mode: "api_key", apiKey: env.VERTEX_API_KEY };
   return {
     fetch: (input, init) => fetch(input, init),
     accountId: env.CF_ACCOUNT_ID,
@@ -91,4 +93,15 @@ export function depsFromEnv(env: { CF_ACCOUNT_ID: string; AIG_NAME: string; CF_A
     project: env.GCP_PROJECT,
     location: env.GCP_LOCATION,
   };
+}
+
+// One short text prompt, to prove the key and the model work (used by /api/health?deep=1).
+export async function ping(d: VertexDeps): Promise<{ ok: boolean; status: number }> {
+  const res = await d.fetch(endpoint(d), {
+    method: "POST",
+    headers: { "content-type": "application/json", ...authHeaders(d) },
+    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Reply with the word ok." }] }], generationConfig: { maxOutputTokens: 5 } }),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  }).catch(() => null);
+  return { ok: Boolean(res?.ok), status: res?.status ?? 0 };
 }

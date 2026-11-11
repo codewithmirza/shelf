@@ -8,6 +8,8 @@ export interface ShelfEnv {
   readonly PAYPAL_CLIENT_ID: string;
   readonly PAYPAL_CLIENT_SECRET: string;
   readonly PAYPAL_WEBHOOK_ID: string;
+  // An Agent Platform (Vertex AI) API key. When set, the model is called directly instead of through AI Gateway.
+  readonly VERTEX_API_KEY?: string;
   readonly CF_ACCOUNT_ID: string;
   readonly CF_AIG_TOKEN: string;
   readonly AIG_NAME: string;

@@ -23,5 +23,8 @@
 4. Fallback: sign a service-account JWT (RS256) with WebCrypto and call Vertex directly.
 5. The Try page chat uses the same model with function calling over the Shelf tools (ADR-010).
 
+## Amendment, 11 Nov 2026
+Google now issues Agent Platform (Vertex AI) API keys billed to the project. When the Worker secret `VERTEX_API_KEY` is set, `src/server/model/vertex.ts` calls `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.8-flash:generateContent` with the `x-goog-api-key` header and skips AI Gateway. The AI Gateway path stays for a service account. `/api/health?deep=1` sends one short prompt to prove the key and the model.
+
 ## Consequences
 - AI Gateway logs must not store photo content beyond the gateway's retention. Turn off request logging for the gateway if available.
