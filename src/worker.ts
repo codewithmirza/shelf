@@ -9,9 +9,16 @@ import { reconcile } from "./server/reconcile";
 
 const MCP_ROUTE = "/mcp";
 
+// PUBLIC_ORIGIN may be empty: then links and photo URLs use the origin this request came to (workers.dev
+// or a custom domain). The bindings stay on the prototype, so nothing is copied.
+function withOrigin(env: ShelfEnv, origin: string): ShelfEnv {
+  return env.PUBLIC_ORIGIN ? env : Object.assign(Object.create(env) as ShelfEnv, { PUBLIC_ORIGIN: origin });
+}
+
 export default {
-  async fetch(request: Request, env: ShelfEnv, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, rawEnv: ShelfEnv, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const env = withOrigin(rawEnv, url.origin);
     if (url.pathname === MCP_ROUTE) {
       // A new handler per request lets the server factory see this request's env, with no session store.
       const handler = createMcpHandler(() => createShelfServer(mcpDeps(env)), { route: MCP_ROUTE });
