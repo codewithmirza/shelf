@@ -3,7 +3,10 @@
 .bar { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); justify-content: center; padding: var(--space-2) var(--space-4); background: var(--color-surface-sunken); font-size: var(--text-13); color: var(--color-ink-secondary); }
 .creds code { font-family: var(--font-mono); font-size: var(--text-12); color: var(--color-ink); }
 .copy { margin-left: var(--space-1); padding: 0 var(--space-2); height: 24px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-12); cursor: pointer; }
-.head { max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-4); display: flex; align-items: baseline; justify-content: space-between; }
+.head { max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-4); display: flex; align-items: center; justify-content: space-between; }
+.headRight { display: flex; align-items: center; gap: var(--space-3); }
+.theme { height: 28px; padding: 0 var(--space-2); border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink-secondary); font: inherit; font-size: var(--text-13); cursor: pointer; }
+.theme:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
 .brand { font-weight: var(--weight-semibold); color: var(--color-ink); text-decoration: none; }
 .h1 { margin: 0; font-size: var(--text-13); font-weight: var(--weight-medium); color: var(--color-ink-tertiary); }
 .chat { max-width: 720px; margin: 0 auto; padding: 0 var(--space-4) 120px; }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useResolvedTheme } from "@/components/theme";
 import { callTool, parseSearch, type ToolResult } from "./mcp-client";
 import { StorefrontFrame } from "./storefront-frame";
 import styles from "./try.module.css";
@@ -20,17 +21,10 @@ export function TryChat({ examples }: { examples: readonly string[] }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const theme = useResolvedTheme();
   const id = useRef(0);
   const end = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const set = () => setTheme(mq.matches ? "dark" : "light");
-    set();
-    mq.addEventListener("change", set);
-    return () => mq.removeEventListener("change", set);
-  }, []);
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [turns.length]);
 
   const add = (t: NewTurn) => setTurns((ts) => [...ts, { ...t, id: ++id.current } as Turn]);

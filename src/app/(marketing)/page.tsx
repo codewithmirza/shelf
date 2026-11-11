@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mark } from "@/components/mark";
+import { ThemeSwitch } from "@/components/theme";
 import styles from "./landing.module.css";
 
 const REPO = "https://github.com/codewithmirza/shelf";
@@ -18,6 +19,7 @@ export default function LandingPage() {
           <Link href="/try" className={styles.navOn}>Try it</Link>
           <a href={REPO}>GitHub</a>
           <Link href="/app">For sellers</Link>
+          <ThemeSwitch className={styles.theme} />
         </nav>
       </header>
       <main className={styles.main}>

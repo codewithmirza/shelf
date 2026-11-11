@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { StoreRecord } from "@/server/seller/stores";
 import type { StoreKeyRow } from "@/server/seller/keys";
 import { api, when } from "../api";
+import { ThemeSwitch } from "@/components/theme";
 import { BottomBar, Button, Field, Header, Icon, Notice } from "../ui";
 import styles from "../seller.module.css";
 
@@ -57,7 +58,7 @@ export function StoreScreen() {
   return (
     <>
       <main className={styles.page}>
-        <Header title="Store" />
+        <Header title="Store" action={<ThemeSwitch className={styles.themeSwitch} />} />
         {error && <Notice>{error}</Notice>}
         <section className={styles.section}>
           <h2 className={styles.label}>Your store link</h2>

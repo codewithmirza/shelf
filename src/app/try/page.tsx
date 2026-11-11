@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { searchExamples } from "@/server/catalog";
 import { shelfEnv } from "@/server/http";
+import { ThemeSwitch } from "@/components/theme";
 import { CopyButton } from "./copy-button";
 import { TryChat } from "./try-chat";
 import styles from "./try.module.css";
@@ -26,7 +27,10 @@ export default async function TryPage() {
       </div>
       <header className={styles.head}>
         <a href="/" className={styles.brand}>Shelf</a>
-        <h1 className={styles.h1}>Try it</h1>
+        <div className={styles.headRight}>
+          <h1 className={styles.h1}>Try it</h1>
+          <ThemeSwitch className={styles.theme} />
+        </div>
       </header>
       <TryChat examples={examples} />
     </main>

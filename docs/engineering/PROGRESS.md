@@ -37,7 +37,7 @@
 | T-21 | Cart API v1 | Done (local) | TC-CART-02, -03, -05 and TC-CART-01 against the PayPal fake on real SQLite; scripts/cart_agent.mjs for the live run; ADR-007 amended |
 | T-22 | Try page Gemini chat (waits for S-03) | Next | — |
 | T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
-| T-25 | Try page | In progress | Examples come from published products |
+| T-25 | Try page | In progress | Theme switch; examples from published products |
 | T-26 | Live sandbox run and review | In progress | Money-path review done: fixed webhook verification (original body) and MCP limit. Live payment, sign-in round trip, webhook delivery and Claude rendering wait for a real seller store (founder) and S-03 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
@@ -58,6 +58,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 15:14 | Claude | Theme switch (Auto, Light, Dark) on the landing page, Try page and the Store screen; the choice applies before paint and reaches the Storefront through hostContext. |
 | 11 Nov 13:54 | Claude | Try page search verified live: 'laddu' returns the two published Alcooz products in the Storefront. Example chips now come from published product titles, not hard-coded mug examples. |
 | 11 Nov 13:52 | Claude | First real store live (sandbox business seller). 4 real photos drafted by Gemini on Vertex; seller set prices and published 2. |
 | 11 Nov 13:13 | Claude | T-07 verified live: a separate sandbox business seller signed in and Shelf stored its payer ID. The app owner's own account cannot be a seller (ADR-008 amendment). App attributes cut to name, email, account ID. |
