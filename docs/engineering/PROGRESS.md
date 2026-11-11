@@ -23,6 +23,7 @@
 | T-03 | PayPal REST client | Done (unit) | 11 unit tests: same PayPal-Request-Id on retry, no 4xx retry, timeout mapped, shapes parsed. Live TC-PAY-01 waits for S-04 |
 | T-04 | Vertex client and extraction schema | Done (offline) | TC-AI-01 with a hand-written fixture answer; retry once on schema break. Live SPK-04 waits for S-03 (`evidence/SPK-04.md`) |
 | T-05 | MCP server and Storefront resource | Done (local) | Local Worker answers from D1; TC-MCP-01 in CI. Host screenshots wait for S-02, S-08 (`evidence/SPK-02.md`) |
+| T-07 | Log in with PayPal and sessions | Done | Live sign-in by a sandbox business seller; payer ID stored |
 | T-08 | Domain rules | Done | Every move of the 4 machines checked; TC-PAY-02, TC-PAY-06, TC-CART-04 |
 | T-09 | search_products, show_product, update_cart | Done | TC-MCP-01, TC-MCP-03, TC-CART-02; every cart state planned (CQ-34); checked on the local Worker with seeded D1 |
 | T-10 | start_checkout, Pay page, capture, signed tokens | Done (local) | TC-PAY-01 (unit), TC-PAY-03, TC-SEC-02; Pay page rendered locally (`evidence/SPK-03.md`). Live sandbox pay waits for S-04, S-05. T-06 spike folded in |
@@ -56,6 +57,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 13:13 | Claude | T-07 verified live: a separate sandbox business seller signed in and Shelf stored its payer ID. The app owner's own account cannot be a seller (ADR-008 amendment). App attributes cut to name, email, account ID. |
 | 11 Nov 11:55 | Claude | Review pass: two fixes pushed. Waiting on: Log in with PayPal enabled on the sandbox app, a first real store, TRY_BUYER_* vars, Vertex (S-03), the Claude connector (S-08). |
 | 11 Nov 11:54 | Claude | T-25: traceability and secret checks; TC-AI-03 added. T-27 part: README is the judge guide with the verified and not verified table. |
 | 11 Nov 11:53 | Claude | T-24: landing and store pages. Positioning widened from Claude and ChatGPT to AI assistants: the app renders where MCP Apps are supported, the tools work in any MCP client, the Cart API in any agent. |

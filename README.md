@@ -63,7 +63,7 @@ What has been proven, and how. Updated as each live check runs.
 
 | Claim | Status | Evidence |
 | --- | --- | --- |
-| Cart pricing, state machines, idempotency keys, signed tokens | Verified, automated | `pnpm check`: 179 tests, typecheck, schema check, test-case traceability and a secret scan, in CI on every push |
+| Cart pricing, state machines, idempotency keys, signed tokens | Verified, automated | `pnpm check`: 185 tests, typecheck, schema check, test-case traceability and a secret scan, in CI on every push |
 | D1 adapters run their real SQL (guarded batches, unique indexes) | Verified, automated | Tests run on Node's SQLite with the real migration (`tests/support/d1.ts`) |
 | MCP surface: tools, `_meta`, MIME, no `connectDomains` | Verified, automated and live | TC-MCP-01; `tools/list` on the deployed Worker |
 | Storefront views and the Paid moment | Verified in a browser | Hosted through `AppBridge` on the Try page; order views with fixture tool results |
@@ -72,7 +72,7 @@ What has been proven, and how. Updated as each live check runs.
 | Log in with PayPal redirect | Verified live | `/api/auth/paypal/start` redirects with the scopes and a `state` cookie |
 | An unsigned webhook changes nothing | Verified live | 400 before any PayPal call |
 | A full sandbox payment, approval to Paid | **Not yet verified live** | Covered by tests against a PayPal fake; live run pending |
-| Log in with PayPal round trip | **Not yet verified live** | Needs the sandbox app's return URL |
+| Log in with PayPal round trip | Verified live | A sandbox business seller signed in; Shelf stored its payer ID. The app's own owner account cannot sign in as a seller, by design |
 | PayPal webhook delivery | **Not yet verified live** | Webhook ID is set; waiting for the first real event |
 | Photo to draft with Gemini | **Not yet verified live** | Vertex is not configured yet; the failed-read path works |
 | Rendering inside Claude and ChatGPT | **Not yet verified** | Needs the connector added in each assistant |
