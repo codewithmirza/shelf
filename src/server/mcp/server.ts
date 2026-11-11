@@ -1,14 +1,29 @@
 import { McpServer } from "@modelcontextprotocol/server";
-import type { ShelfEnv } from "@/env";
+import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/ext-apps/server";
+import type { Catalog } from "../catalog";
+import { STOREFRONT_HTML } from "./storefront.generated";
+import { registerSearch } from "./tools/search";
+import { STOREFRONT_URI } from "./ui";
+
+export interface ShelfMcpDeps {
+  readonly catalog: Catalog;
+  // PUBLIC_ORIGIN; photos load from here, so it is the only resource domain (ADR-009).
+  readonly origin: string;
+  readonly version: string;
+}
+
+export const INSTRUCTIONS =
+  "Shelf lets the user browse small independent stores and pay with PayPal. Show results with the Storefront. Never claim an order is paid unless get_order_status says Captured.";
 
 // Builds one MCP server per request, so no tool keeps state between calls (ADR-002).
-export function createShelfServer(_env: ShelfEnv): McpServer {
-  const server = new McpServer(
-    { name: "shelf", title: "Shelf", version: "0.1.0" },
-    {
-      instructions:
-        "Shelf lets the user browse small independent stores and pay with PayPal. Show results with the Storefront. Never claim an order is paid unless get_order_status says Captured.",
-    },
-  );
+export function createShelfServer(deps: ShelfMcpDeps): McpServer {
+  const server = new McpServer({ name: "shelf", title: "Shelf", version: deps.version }, { instructions: INSTRUCTIONS });
+
+  const uiMeta = { ui: { csp: { resourceDomains: [deps.origin] }, prefersBorder: true } };
+  registerAppResource(server, "Shelf Storefront", STOREFRONT_URI, { description: "The Shelf Storefront view.", _meta: uiMeta }, async () => ({
+    contents: [{ uri: STOREFRONT_URI, mimeType: RESOURCE_MIME_TYPE, text: STOREFRONT_HTML, _meta: uiMeta }],
+  }));
+
+  registerSearch(server, deps);
   return server;
 }

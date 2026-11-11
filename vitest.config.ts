@@ -1,8 +1,8 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
-// Unit tests run in Node: the domain has no I/O. Integration tests in the Workers runtime come in later tasks.
+// Tests run in Node. I/O sits behind injected ports (CQ-26), so integration tests drive the real MCP server with fakes.
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  test: { include: ["tests/unit/**/*.test.ts", "tests/contract/**/*.test.ts"], environment: "node" },
+  test: { include: ["tests/unit/**/*.test.ts", "tests/contract/**/*.test.ts", "tests/integration/**/*.test.ts"], environment: "node" },
 });
