@@ -3,9 +3,11 @@ import { RESOURCE_MIME_TYPE, registerAppResource } from "@modelcontextprotocol/e
 import type { Catalog } from "../catalog";
 import type { CartDeps } from "../carts";
 import type { CheckoutDeps } from "../checkout";
+import type { OrderDeps } from "../orders";
 import { STOREFRONT_HTML } from "./storefront.generated";
 import { registerUpdateCart } from "./tools/cart";
 import { registerStartCheckout } from "./tools/checkout";
+import { registerOrderTools } from "./tools/order";
 import { registerShowProduct } from "./tools/product";
 import { registerSearch } from "./tools/search";
 import { STOREFRONT_URI } from "./ui";
@@ -14,6 +16,7 @@ export interface ShelfMcpDeps {
   readonly catalog: Catalog;
   readonly carts: CartDeps;
   readonly checkout: CheckoutDeps;
+  readonly orders: OrderDeps;
   // PUBLIC_ORIGIN; photos load from here, so it is the only resource domain (ADR-009).
   readonly origin: string;
   readonly version: string;
@@ -35,5 +38,6 @@ export function createShelfServer(deps: ShelfMcpDeps): McpServer {
   registerShowProduct(server, deps);
   registerUpdateCart(server, deps.carts);
   registerStartCheckout(server, deps.checkout);
+  registerOrderTools(server, deps.orders);
   return server;
 }

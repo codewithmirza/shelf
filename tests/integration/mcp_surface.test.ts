@@ -47,6 +47,8 @@ describe("MCP surface (TC-MCP-01)", () => {
       show_product: { readOnlyHint: true },
       update_cart: { idempotentHint: true, readOnlyHint: false },
       start_checkout: { readOnlyHint: false, destructiveHint: false },
+      get_order_status: { readOnlyHint: true },
+      request_refund: { destructiveHint: false },
     };
     for (const [name, annotations] of Object.entries(expected)) {
       const tool = byName.get(name) as { _meta: any; annotations: any } | undefined;

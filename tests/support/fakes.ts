@@ -53,6 +53,7 @@ export function fakeCatalog(rows: ProductCardRow[] = [], products: ProductDetail
 // ---- Orders and PayPal ----------------------------------------------------------------------------------
 import { paypalOrderId as ppId, captureId as capId, type OrderId, type PayPalOrderId } from "@/server/domain/brand";
 import type { OrderRepo, OrderRow, PaymentsPort } from "@/server/checkout";
+import type { OrderStatusRepo } from "@/server/orders";
 import type { CreateOrderInput } from "@/server/paypal/orders";
 import { err as fail, ok as pass } from "@/server/domain/result";
 import { domainError } from "@/server/domain/errors";
@@ -168,6 +169,29 @@ export function fakePayPal() {
   return port;
 }
 
+// A small in-memory read model over the fake orders, for tests that do not need SQL.
+export function memoryOrderStatusRepo(orders: ReturnType<typeof memoryOrderRepo>, carts: ReturnType<typeof memoryCartRepo>): OrderStatusRepo {
+  const refunds = new Map<string, { state: "pending" | "approved" | "declined" | "done" | "failed"; declineReason: string | null }>();
+  return {
+    async status(id) {
+      const o = orders.orders.get(id);
+      if (!o) return null;
+      const cart = carts.carts.get(o.cartId);
+      return {
+        id: o.id, state: o.state, amountCents: o.amountCents, refundedCents: cents(0), storeName: "Maya Mugs", lines: cart?.lines ?? [], tracking: null,
+        refundRequest: refunds.get(id) ?? null,
+        events: orders.events.filter((e) => e.orderId === id).map((e) => ({ at: o.createdAt, actor: "system", type: e.type, data: {} })),
+      };
+    },
+    async createRefundRequest(i) {
+      if (refunds.get(i.orderId)?.state === "pending") return "exists";
+      refunds.set(i.orderId, { state: "pending", declineReason: null });
+      orders.events.push({ orderId: i.orderId, type: "refund.requested" });
+      return "created";
+    },
+  };
+}
+
 export const TOKEN_SECRET = "test-secret-test-secret-test-secret-1234";
 
 export function testWorld(catalog: Catalog = fakeCatalog().catalog) {
@@ -176,5 +200,6 @@ export function testWorld(catalog: Catalog = fakeCatalog().catalog) {
   const orders = memoryOrderRepo(repo, ids);
   const paypal = fakePayPal();
   const checkout = { carts: repo, orders, payments: paypal, ids, tokenSecret: TOKEN_SECRET, origin: "https://shelf.test" };
-  return { ids, repo, orders, paypal, checkout, deps: { catalog, carts: { repo, ids }, checkout, origin: "https://shelf.test", version: "0.1.0" } };
+  const orderDeps = { repo: memoryOrderStatusRepo(orders, repo), ids, tokenSecret: TOKEN_SECRET };
+  return { ids, repo, orders, paypal, checkout, orderDeps, deps: { catalog, carts: { repo, ids }, checkout, orders: orderDeps, origin: "https://shelf.test", version: "0.1.0" } };
 }

@@ -11,6 +11,7 @@ import { domainError } from "./domain/errors";
 import { err, ok } from "./domain/result";
 import { verifyWebhook } from "./paypal/webhooks";
 import { d1WebhookRepo, type WebhookDeps } from "./webhooks";
+import { d1OrderStatusRepo } from "./orders";
 
 // The one place that turns Worker bindings into the ports the server code uses (CQ-26).
 export function checkoutDeps(env: ShelfEnv): CheckoutDeps {
@@ -27,7 +28,14 @@ export function checkoutDeps(env: ShelfEnv): CheckoutDeps {
 
 export function mcpDeps(env: ShelfEnv): ShelfMcpDeps {
   const checkout = checkoutDeps(env);
-  return { catalog: d1Catalog(env.DB), carts: { repo: checkout.carts, ids: checkout.ids }, checkout, origin: env.PUBLIC_ORIGIN, version: VERSION };
+  return {
+    catalog: d1Catalog(env.DB),
+    carts: { repo: checkout.carts, ids: checkout.ids },
+    checkout,
+    orders: { repo: d1OrderStatusRepo(env.DB), ids: checkout.ids, tokenSecret: env.TOKEN_SECRET },
+    origin: env.PUBLIC_ORIGIN,
+    version: VERSION,
+  };
 }
 
 export function webhookDeps(env: ShelfEnv): WebhookDeps {
