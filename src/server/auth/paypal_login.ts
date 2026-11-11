@@ -8,7 +8,11 @@ export const LOGIN_SCOPES = "openid email https://uri.paypal.com/services/paypal
 
 export function authorizeUrl(baseUrl: string, clientId: string, redirectUri: string, state: string): string {
   const web = baseUrl.includes("sandbox") ? "https://www.sandbox.paypal.com" : "https://www.paypal.com";
-  const q = new URLSearchParams({ flowEntry: "static", client_id: clientId, response_type: "code", scope: LOGIN_SCOPES, redirect_uri: redirectUri, state });
+  // Encode with encodeURIComponent, never URLSearchParams: URLSearchParams turns spaces into "+", and PayPal reads
+  // "openid+email+…" as one unknown scope, grants only openid, and userinfo then answers 400 invalid_request.
+  const q = Object.entries({ flowEntry: "static", client_id: clientId, response_type: "code", scope: LOGIN_SCOPES, redirect_uri: redirectUri, state })
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+    .join("&");
   // The documented Connect with PayPal endpoint (developer.paypal.com/log-in/build-button).
   return `${web}/connect?${q}`;
 }

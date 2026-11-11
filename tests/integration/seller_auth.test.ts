@@ -13,6 +13,9 @@ describe("Log in with PayPal (TC-SEL-01)", () => {
     const u = new URL(authorizeUrl("https://api-m.sandbox.paypal.com", "CID", "https://s.test/api/auth/paypal/return", "ST"));
     expect(u.origin + u.pathname).toBe("https://www.sandbox.paypal.com/connect");
     expect(u.searchParams.get("scope")).toBe("openid email https://uri.paypal.com/services/paypalattributes");
+    // Spaces must be %20: PayPal reads "+" literally and would see one unknown scope.
+    expect(u.search).toContain("scope=openid%20email%20https%3A%2F%2Furi.paypal.com%2Fservices%2Fpaypalattributes");
+    expect(u.search).not.toContain("+");
     expect([u.searchParams.get("state"), u.searchParams.get("redirect_uri"), u.searchParams.get("response_type")]).toEqual(["ST", "https://s.test/api/auth/paypal/return", "code"]);
   });
 
