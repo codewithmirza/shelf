@@ -37,12 +37,24 @@ export interface OrderRepo {
   // T-ORD-03, T-CRT-05, the stock decrease and one Event, in one batch that does nothing
   // unless the order is still Created or Approved. True if this call made the change.
   markCaptured(order: OrderRow, facts: CaptureFacts, eventId: string, now: string): Promise<boolean>;
+  // T-ORD-02, only from Created.
+  markApproved(order: OrderRow, eventId: string, now: string): Promise<boolean>;
+  // T-ORD-06 and T-CRT-06 for its cart, only from Created or Approved.
+  markCancelled(order: OrderRow, reason: string, eventId: string, now: string): Promise<boolean>;
+  // T-ORD-05 for a full refund, and T-RFD-04 for its Approved request, only from Captured or Shipped.
+  markRefunded(order: OrderRow, eventId: string, now: string): Promise<boolean>;
+  byPayPalId(id: PayPalOrderId): Promise<(OrderRow & { readonly createdAt: string }) | null>;
+  // Orders still Created or Approved whose last change is older than `before` (SYS-PAY-09).
+  listStale(before: string, limit: number): Promise<readonly (OrderRow & { readonly createdAt: string })[]>;
+  // T-CRT-06: carts past their expiry that hold no live order. Returns how many moved.
+  expireCarts(now: string): Promise<number>;
 }
 
 // The two PayPal calls checkout makes. The real ones are in paypal/orders.ts.
 export interface PaymentsPort {
   createOrder(input: CreateOrderInput): Promise<Result<CreatedOrder, PayPalFailure>>;
   captureOrder(id: PayPalOrderId, requestId: string): Promise<Result<OrderSnapshot, PayPalFailure>>;
+  getOrder(id: PayPalOrderId): Promise<Result<OrderSnapshot, PayPalFailure>>;
 }
 
 export interface CheckoutDeps {
@@ -183,7 +195,7 @@ export async function captureFromPayPalReturn(deps: CheckoutDeps, rawOrderId: st
 
 // Calling it twice captures once: a final order answers at once, and the PayPal call carries
 // capture:{order} as its request ID (INV-04, AC-BUY-03-03).
-async function captureOrderOnce(deps: CheckoutDeps, order: OrderRow): Promise<Result<OrderState, DomainError>> {
+export async function captureOrderOnce(deps: CheckoutDeps, order: OrderRow): Promise<Result<OrderState, DomainError>> {
   switch (order.state) {
     case "captured":
     case "shipped":
@@ -264,6 +276,54 @@ export function d1OrderRepo(db: D1Database): OrderRepo {
           .bind(f.captureId, f.buyerEmail, f.shippingJson, now, o.id),
       ]);
       return (results.at(-1)?.meta.changes ?? 0) === 1;
+    },
+    async markApproved(o, eventId, now) {
+      const results = await db.batch([
+        db.prepare("INSERT INTO events (id, order_id, actor, type, data_json, created_at) SELECT ?, ?, 'paypal', 'order.approved', '{}', ? WHERE EXISTS (SELECT 1 FROM orders WHERE id = ? AND state = 'created')")
+          .bind(eventId, o.id, now, o.id),
+        db.prepare("UPDATE orders SET state = 'approved', version = version + 1, updated_at = ? WHERE id = ? AND state = 'created'").bind(now, o.id),
+      ]);
+      return (results.at(-1)?.meta.changes ?? 0) === 1;
+    },
+    async markCancelled(o, reason, eventId, now) {
+      const open = "EXISTS (SELECT 1 FROM orders WHERE id = ? AND state IN ('created','approved'))";
+      const results = await db.batch([
+        db.prepare(`UPDATE carts SET state = 'expired', updated_at = ? WHERE id = ? AND state = 'checking_out' AND ${open}`).bind(now, o.cartId, o.id),
+        db.prepare(`INSERT INTO events (id, order_id, actor, type, data_json, created_at) SELECT ?, ?, 'system', 'order.cancelled', ?, ? WHERE ${open}`)
+          .bind(eventId, o.id, JSON.stringify({ reason }), now, o.id),
+        db.prepare("UPDATE orders SET state = 'cancelled', version = version + 1, updated_at = ? WHERE id = ? AND state IN ('created','approved')").bind(now, o.id),
+      ]);
+      return (results.at(-1)?.meta.changes ?? 0) === 1;
+    },
+    async markRefunded(o, eventId, now) {
+      const open = "EXISTS (SELECT 1 FROM orders WHERE id = ? AND state IN ('captured','shipped'))";
+      const results = await db.batch([
+        db.prepare(`UPDATE refund_requests SET state = 'done', updated_at = ? WHERE order_id = ? AND state = 'approved' AND ${open}`).bind(now, o.id, o.id),
+        db.prepare(`INSERT INTO events (id, order_id, actor, type, data_json, created_at) SELECT ?, ?, 'paypal', 'order.refunded', '{}', ? WHERE ${open}`).bind(eventId, o.id, now, o.id),
+        db.prepare("UPDATE orders SET state = 'refunded', refunded_cents = amount_cents, version = version + 1, updated_at = ? WHERE id = ? AND state IN ('captured','shipped')").bind(now, o.id),
+      ]);
+      return (results.at(-1)?.meta.changes ?? 0) === 1;
+    },
+    async byPayPalId(id) {
+      const r = await db.prepare(`SELECT ${ORDER_COLS}, created_at FROM orders WHERE paypal_order_id = ?`).bind(id).first<OrderDbRow & { created_at: string }>();
+      return r ? { ...rowToOrder(r), createdAt: r.created_at } : null;
+    },
+    async listStale(before, limit) {
+      const { results } = await db
+        .prepare(`SELECT ${ORDER_COLS}, created_at FROM orders WHERE state IN ('created','approved') AND updated_at < ? ORDER BY updated_at LIMIT ?`)
+        .bind(before, limit)
+        .all<OrderDbRow & { created_at: string }>();
+      return results.map((r) => ({ ...rowToOrder(r), createdAt: r.created_at }));
+    },
+    async expireCarts(now) {
+      const res = await db
+        .prepare(
+          `UPDATE carts SET state = 'expired', updated_at = ? WHERE expires_at <= ? AND (state IN ('ready','incomplete')
+             OR (state = 'checking_out' AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.cart_id = carts.id AND o.state NOT IN ('cancelled'))))`,
+        )
+        .bind(now, now)
+        .run();
+      return res.meta.changes;
     },
   };
 }

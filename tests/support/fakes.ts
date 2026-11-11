@@ -59,21 +59,31 @@ import { domainError } from "@/server/domain/errors";
 
 export const PAYEES: Record<string, string> = { sto_maya: "maya@sandbox.test", sto_river: "river@sandbox.test" };
 
-export function memoryOrderRepo(carts: ReturnType<typeof memoryCartRepo>) {
-  const orders = new Map<OrderId, OrderRow & { captureId?: string; buyerEmail?: string | null }>();
+export function memoryOrderRepo(carts: ReturnType<typeof memoryCartRepo>, clock: { now(): Date } = { now: () => new Date() }) {
+  type Row = OrderRow & { captureId?: string; buyerEmail?: string | null; createdAt: string; updatedAt: string };
+  const orders = new Map<OrderId, Row>();
   const events: { orderId: OrderId; type: string }[] = [];
   let failNextInsert = false;
+  const stamp = () => clock.now().toISOString();
+  const move = (id: OrderId, from: OrderRow["state"][], to: OrderRow["state"], type: string, extra: Partial<Row> = {}) => {
+    const cur = orders.get(id);
+    if (!cur || !from.includes(cur.state)) return false;
+    orders.set(id, { ...cur, ...extra, state: to, updatedAt: stamp() });
+    events.push({ orderId: id, type });
+    return true;
+  };
   const repo: OrderRepo & { orders: typeof orders; events: typeof events; failNextInsert(): void } = {
     orders,
     events,
     failNextInsert() { failNextInsert = true; },
     async byId(id) { return orders.get(id) ?? null; },
     async byCart(cart) { return [...orders.values()].find((o) => o.cartId === cart) ?? null; },
+    async byPayPalId(id) { return [...orders.values()].find((o) => o.paypalOrderId === id) ?? null; },
     async payeeEmail(store) { return PAYEES[store] ?? null; },
     async insertCreated(o) {
       if (failNextInsert) { failNextInsert = false; throw new Error("D1 down"); }
       if ([...orders.values()].some((x) => x.cartId === o.cartId)) throw new Error("UNIQUE cart_id");
-      orders.set(o.id, o);
+      orders.set(o.id, { ...o, createdAt: stamp(), updatedAt: stamp() });
       events.push({ orderId: o.id, type: "order.created" });
     },
     async markCaptured(o, f) {
@@ -82,24 +92,59 @@ export function memoryOrderRepo(carts: ReturnType<typeof memoryCartRepo>) {
       for (const l of f.lines) { const v = carts.variantMap.get(l.variantId); if (v) carts.variantMap.set(v.id, { ...v, stock: Math.max(v.stock - l.quantity, 0) }); }
       const cart = carts.carts.get(o.cartId);
       if (cart?.state === "checking_out") carts.carts.set(cart.id, { ...cart, state: "completed" });
-      events.push({ orderId: o.id, type: "order.captured" });
-      orders.set(o.id, { ...cur, state: "captured", captureId: f.captureId, buyerEmail: f.buyerEmail });
-      return true;
+      return move(o.id, ["created", "approved"], "captured", "order.captured", { captureId: f.captureId, buyerEmail: f.buyerEmail });
+    },
+    async markApproved(o) { return move(o.id, ["created"], "approved", "order.approved"); },
+    async markCancelled(o) {
+      const ok = move(o.id, ["created", "approved"], "cancelled", "order.cancelled");
+      const cart = carts.carts.get(o.cartId);
+      if (ok && cart?.state === "checking_out") carts.carts.set(cart.id, { ...cart, state: "expired" });
+      return ok;
+    },
+    async markRefunded(o) { return move(o.id, ["captured", "shipped"], "refunded", "order.refunded"); },
+    async listStale(before, limit) {
+      return [...orders.values()].filter((o) => (o.state === "created" || o.state === "approved") && o.updatedAt < before).slice(0, limit);
+    },
+    async expireCarts(now) {
+      let n = 0;
+      for (const c of carts.carts.values()) {
+        const live = [...orders.values()].some((o) => o.cartId === c.id && o.state !== "cancelled");
+        if (c.expiresAt <= now && (c.state === "ready" || c.state === "incomplete" || (c.state === "checking_out" && !live))) {
+          carts.carts.set(c.id, { ...c, state: "expired" });
+          n++;
+        }
+      }
+      return n;
     },
   };
   return repo;
 }
 
-// Behaves like PayPal for what checkout relies on: one result per PayPal-Request-Id, and no capture before approval.
+// Behaves like PayPal for what Shelf relies on: one result per PayPal-Request-Id, no capture before
+// approval, and getOrder reports the true state.
 export function fakePayPal() {
+  type PpState = "PAYER_ACTION_REQUIRED" | "APPROVED" | "COMPLETED" | "VOIDED";
   const byKey = new Map<string, PayPalOrderId>();
-  const approved = new Set<string>();
+  const state = new Map<string, PpState>();
   const captures = new Map<string, string>();
-  const calls: { kind: "create" | "capture"; key: string; input?: CreateOrderInput }[] = [];
+  const refunded = new Set<string>();
+  const calls: { kind: "create" | "capture" | "get"; key: string; input?: CreateOrderInput }[] = [];
   let n = 0;
-  const port: PaymentsPort & { calls: typeof calls; approve(id: string): void; captureCount(): number } = {
+  const snapshot = (id: string) => {
+    const cap = captures.get(id);
+    return {
+      status: state.get(id) ?? "PAYER_ACTION_REQUIRED",
+      capture: cap ? { id: capId(cap), amountCents: cents(0), status: refunded.has(id) ? "REFUNDED" : "COMPLETED" } : null,
+      payerEmail: "ben@sandbox.test",
+      shipping: { address: { country_code: "US" } },
+    } as const;
+  };
+  const port: PaymentsPort & { calls: typeof calls; approve(id: string): void; captureAtPayPal(id: string): void; void(id: string): void; refund(id: string): void; captureCount(): number } = {
     calls,
-    approve(id) { approved.add(id); },
+    approve(id) { state.set(id, "APPROVED"); },
+    captureAtPayPal(id) { state.set(id, "COMPLETED"); captures.set(id, `CAP-${id}`); },
+    void(id) { state.set(id, "VOIDED"); },
+    refund(id) { refunded.add(id); },
     captureCount: () => captures.size,
     async createOrder(input) {
       calls.push({ kind: "create", key: input.requestId, input });
@@ -109,9 +154,15 @@ export function fakePayPal() {
     },
     async captureOrder(id, key) {
       calls.push({ kind: "capture", key });
-      if (!approved.has(id)) return fail({ ...domainError("paypal.refused", "ORDER_NOT_APPROVED"), status: 422, paypalName: "ORDER_NOT_APPROVED" });
+      const st = state.get(id);
+      if (st !== "APPROVED" && st !== "COMPLETED") return fail({ ...domainError("paypal.refused", "ORDER_NOT_APPROVED"), status: 422, paypalName: "ORDER_NOT_APPROVED" });
       if (!captures.has(id)) captures.set(id, `CAP-${id}`);
-      return pass({ status: "COMPLETED", capture: { id: capId(captures.get(id)!), amountCents: cents(0), status: "COMPLETED" }, payerEmail: "ben@sandbox.test", shipping: { address: { country_code: "US" } } });
+      state.set(id, "COMPLETED");
+      return pass(snapshot(id));
+    },
+    async getOrder(id) {
+      calls.push({ kind: "get", key: id });
+      return pass(snapshot(id));
     },
   };
   return port;
@@ -122,7 +173,7 @@ export const TOKEN_SECRET = "test-secret-test-secret-test-secret-1234";
 export function testWorld(catalog: Catalog = fakeCatalog().catalog) {
   const ids = fakeIds();
   const repo = memoryCartRepo([MAYA, RIVER], [variant("var_s", MAYA, 2400, 8), variant("var_l", MAYA, 3200, 5), variant("var_sold", MAYA, 1800, 0), variant("var_river", RIVER, 4500)]);
-  const orders = memoryOrderRepo(repo);
+  const orders = memoryOrderRepo(repo, ids);
   const paypal = fakePayPal();
   const checkout = { carts: repo, orders, payments: paypal, ids, tokenSecret: TOKEN_SECRET, origin: "https://shelf.test" };
   return { ids, repo, orders, paypal, checkout, deps: { catalog, carts: { repo, ids }, checkout, origin: "https://shelf.test", version: "0.1.0" } };

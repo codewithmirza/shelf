@@ -9,8 +9,8 @@
   "limits": { "cpu_ms": 60000 },
   "observability": { "enabled": true },
   "d1_databases": [
-    // database_id is set by the founder after `wrangler d1 create shelf` (deferred-setup S-02).
-    { "binding": "DB", "database_name": "shelf", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "db/migrations" }
+    // D1 `shelf`, created 11 Nov 2026 (WNAM).
+    { "binding": "DB", "database_name": "shelf", "database_id": "7973d001-f24c-468b-955d-0ae4bc22758c", "migrations_dir": "db/migrations" }
   ],
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "shelf-photos" }],
   "queues": {

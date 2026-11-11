@@ -26,7 +26,8 @@
 | T-08 | Domain rules | Done | Every move of the 4 machines checked; TC-PAY-02, TC-PAY-06, TC-CART-04 |
 | T-09 | search_products, show_product, update_cart | Done | TC-MCP-01, TC-MCP-03, TC-CART-02; every cart state planned (CQ-34); checked on the local Worker with seeded D1 |
 | T-10 | start_checkout, Pay page, capture, signed tokens | Done (local) | TC-PAY-01 (unit), TC-PAY-03, TC-SEC-02; Pay page rendered locally (`evidence/SPK-03.md`). Live sandbox pay waits for S-04, S-05. T-06 spike folded in |
-| T-11 | Webhooks and the reconciler | Next | — |
+| T-11 | Webhooks and the reconciler | Done | TC-PAY-04, TC-PAY-09 on fakes and on real SQLite with the migration (tests/support/d1.ts). Live webhook waits for S-07 |
+| T-12 | get_order_status and request_refund | Next | — |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -46,6 +47,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:17 | Claude | T-11: verified webhooks apply PayPal's truth through one syncFromPayPal shared with the 5-minute reconciler (CQ-31); approved-but-uncaptured orders are captured; unpaid orders cancel after 3 h; idle carts expire. D1 adapters now run their real SQL in CI. D1 shelf and R2 shelf-photos created; database_id set. |
 | 11 Nov 11:40 | Claude | T-10: start_checkout in 3 phases (CQ-28), guarded capture batch, HMAC pay and order tokens, Pay page with an explicit state machine, PayPal redirect fallback. Added `build:worker` (OpenNext calls `build`, so `build` stays `next build`). New secret: `TOKEN_SECRET`. |
 | 11 Nov 12:40 | Claude | T-09: show_product and update_cart over a CartRepo port (D1 + optimistic version); error text table checked against api/error-codes.yaml |
 | 11 Nov 12:20 | Claude | T-05: Storefront resource, `search_products` over a Catalog port (D1), hello Storefront calling a tool, TC-MCP-01 |

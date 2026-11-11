@@ -4,7 +4,8 @@ import { createMcpHandler } from "agents/mcp/server";
 import openNext from "../.open-next/worker.js";
 import type { ExtractionMessage, ShelfEnv } from "./env";
 import { createShelfServer } from "./server/mcp/server";
-import { mcpDeps } from "./server/runtime";
+import { checkoutDeps, mcpDeps } from "./server/runtime";
+import { reconcile } from "./server/reconcile";
 
 const MCP_ROUTE = "/mcp";
 
@@ -24,6 +25,8 @@ export default {
     for (const message of batch.messages) message.retry();
   },
 
-  // Every 5 minutes: reconcile orders with PayPal and expire old carts (task T-11).
-  async scheduled(_controller: ScheduledController, _env: ShelfEnv, _ctx: ExecutionContext): Promise<void> {},
+  // Every 5 minutes: agree with PayPal on open orders, cancel unpaid ones, expire old carts (SYS-PAY-09).
+  async scheduled(_controller: ScheduledController, env: ShelfEnv, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(reconcile(checkoutDeps(env)).then((report) => console.log(JSON.stringify({ level: "info", job: "reconcile", ...report }))));
+  },
 } satisfies ExportedHandler<ShelfEnv, ExtractionMessage>;
