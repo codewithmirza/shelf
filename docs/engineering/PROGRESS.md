@@ -33,8 +33,8 @@
 | T-15 | Seller sign-in and store creation | Done (server) | TC-SEL-01, TC-SEL-02 on real SQLite: state check, both userinfo schemas, 7-day __Host- cookie, one seller per PayPal account, link rules and suggestions. Live sign-in waits for S-06 |
 | T-16 | Seller app screens | Done | A1 to A13 built; walked locally in a browser at 390 px: name store, empty products, upload, reading bar, failed read, Fill in yourself, price guard, publish, orders empty, store key shown once |
 | T-21 | Cart API v1 | Done (local) | TC-CART-02, -03, -05 and TC-CART-01 against the PayPal fake on real SQLite; scripts/cart_agent.mjs for the live run; ADR-007 amended |
-| T-22 | Try page | In progress | Search-box host done and checked locally; Gemini chat waits for S-03 |
-| T-24 | Store page and landing page | Next | — |
+| T-22 | Try page Gemini chat (waits for S-03) | Next | — |
+| T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -54,6 +54,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:53 | Claude | T-24: landing and store pages. Positioning widened from Claude and ChatGPT to AI assistants: the app renders where MCP Apps are supported, the tools work in any MCP client, the Cart API in any agent. |
 | 11 Nov 11:48 | Claude | T-21: Cart API v1 routes behind verifyCartCaller (store key hash), carts bound to their key, checkout through startCheckout, agent script. |
 | 11 Nov 11:46 | Claude | T-16 to T-19 UI: Seller app screens, two-tap refund confirm, tracking sheet, store keys; /api/health reports D1, PayPal token, secrets set (no values). |
 | 11 Nov 11:36 | Claude | T-07/T-15: Log in with PayPal, sessions, store creation. T-16 to T-19 server: photo upload to R2 and the queue, extraction consumer, edit/publish with INV-03 and Suggested marks, seller orders, tracking, refund approve (two phases, refund:{id}) and decline. Change: /photos/{key} serves published products only instead of a signed URL. |

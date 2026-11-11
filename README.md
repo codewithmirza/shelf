@@ -1,8 +1,8 @@
 # Shelf
 
-**Shop and pay with PayPal inside Claude and ChatGPT.**
+**Shop and pay with PayPal inside AI assistants.**
 
-Shelf is the PayPal checkout that lives inside the chat. A buyer finds a small seller's product in Claude or ChatGPT, picks a variant, and pays with PayPal from an interactive storefront that renders in the conversation. A seller gets on Shelf by sending phone photos.
+Shelf is the PayPal checkout that lives inside the chat. A buyer finds a small seller's product in an AI assistant such as Claude or ChatGPT, picks a variant, and pays with PayPal from an interactive storefront that renders in the conversation. A seller gets on Shelf by sending phone photos.
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/) (November 2026). Status: in development. This README becomes the judge guide in task T-27.
 
@@ -16,7 +16,7 @@ Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/) (Nov
 
 | Part | What it does |
 | --- | --- |
-| Storefront | An MCP App that renders product cards, a cart and PayPal checkout inside Claude and ChatGPT. |
+| Storefront | An MCP App that renders product cards, a cart and PayPal checkout in assistants that support MCP Apps (Claude, ChatGPT); the same tools answer as text in any MCP client. |
 | Pay page | Runs the PayPal button (JS SDK v6); the Storefront opens it and shows "Paid" when the capture lands. |
 | Seller app | Photos in, drafts out (Gemini 3.8 Flash on Vertex AI); the seller confirms prices, ships and approves refunds. |
 | Cart API | Each store answers PayPal's Cart API v1 contract, so any agent can buy from it. |

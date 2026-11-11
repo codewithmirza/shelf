@@ -64,7 +64,7 @@ export function Photo(p: { src: string; alt: string; className?: string }) {
 
 export const Footer = () => (
   <footer className="footer">
-    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="3" rx="1" fill="currentColor" /><rect x="5" y="11" width="6" height="8" rx="1" fill="currentColor" /><rect x="13" y="13" width="6" height="6" rx="1" fill="currentColor" /></svg>
+    <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><rect x="5" y="8" width="13" height="13" rx="2.5" /><circle cx="24" cy="16" r="5" /><rect x="3" y="21" width="26.5" height="3.5" rx="1.75" /></svg>
     Sold on Shelf · Payments by PayPal
   </footer>
 );

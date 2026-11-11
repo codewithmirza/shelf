@@ -25,6 +25,9 @@
   --radius-sheet: var(--radius-sheet);
 }
 
+/* Geist from the geist package (next/font, self-hosted). The Storefront keeps the system stack. */
+:root { --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace; }
+
 html { background: var(--color-background); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 body { margin: 0; }
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
