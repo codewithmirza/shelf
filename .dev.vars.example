@@ -1,0 +1,11 @@
+# Local values for `wrangler dev`. Copy to .dev.vars (gitignored). Sandbox only.
+PUBLIC_ORIGIN="http://localhost:8787"
+PAYPAL_CLIENT_ID=""
+PAYPAL_CLIENT_SECRET=""
+PAYPAL_WEBHOOK_ID=""
+TOKEN_SECRET=""            # 32+ random characters: openssl rand -base64 48
+TRY_BUYER_EMAIL=""         # sandbox personal account shown on the Try page
+TRY_BUYER_PASSWORD=""
+CF_ACCOUNT_ID=""
+CF_AIG_TOKEN=""
+GCP_PROJECT=""

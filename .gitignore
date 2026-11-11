@@ -10,4 +10,5 @@ storefront/dist/
 cloudflare-env.d.ts
 next-env.d.ts
 *.tsbuildinfo
-.dev.vars*
+.dev.vars
+!.dev.vars.example

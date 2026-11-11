@@ -18,5 +18,9 @@ jobs:
         run: pnpm vitest run
       - name: Schema matches migrations
         run: bash scripts/check_schema.sh
+      - name: Every test case is traced to a test
+        run: python3 scripts/check_trace.py
+      - name: No secrets in tracked files
+        run: bash scripts/check_secrets.sh
       - name: Storefront and Worker build
         run: pnpm build:worker

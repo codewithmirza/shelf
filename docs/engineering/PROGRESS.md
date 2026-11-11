@@ -35,6 +35,8 @@
 | T-21 | Cart API v1 | Done (local) | TC-CART-02, -03, -05 and TC-CART-01 against the PayPal fake on real SQLite; scripts/cart_agent.mjs for the live run; ADR-007 amended |
 | T-22 | Try page Gemini chat (waits for S-03) | Next | — |
 | T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
+| T-25 | CI and check scripts | Done | pnpm check = types, 179 tests, schema, traceability (27 of 32 test cases named; 5 are live/E2E/manual), secret scan; same steps in CI |
+| T-26 | Live sandbox run and independent review | Next | — |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -54,6 +56,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:54 | Claude | T-25: traceability and secret checks; TC-AI-03 added. T-27 part: README is the judge guide with the verified and not verified table. |
 | 11 Nov 11:53 | Claude | T-24: landing and store pages. Positioning widened from Claude and ChatGPT to AI assistants: the app renders where MCP Apps are supported, the tools work in any MCP client, the Cart API in any agent. |
 | 11 Nov 11:48 | Claude | T-21: Cart API v1 routes behind verifyCartCaller (store key hash), carts bound to their key, checkout through startCheckout, agent script. |
 | 11 Nov 11:46 | Claude | T-16 to T-19 UI: Seller app screens, two-tap refund confirm, tracking sheet, store keys; /api/health reports D1, PayPal token, secrets set (no values). |
