@@ -23,7 +23,7 @@ export interface PayPalIdentity {
   readonly name: string;
 }
 
-const tokenSchema = z.object({ access_token: z.string().min(1), id_token: z.string().optional() });
+const tokenSchema = z.object({ access_token: z.string().min(1), id_token: z.string().optional(), scope: z.string().optional() });
 // Two userinfo schemas exist; read both (ADR-008 point 2).
 const userinfoSchema = z.object({
   user_id: z.string().optional(),
@@ -67,7 +67,9 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
       headers: { authorization: `Bearer ${token.data.access_token}`, "content-type": "application/json" },
       signal: AbortSignal.timeout(10_000),
     }).catch(() => null);
-    statuses.push(String(res?.status ?? "network"));
+    // PayPal's error name (for example invalid_token or INSUFFICIENT_SCOPE) is not personal data; keep it for the log.
+    const errName = res && !res.ok ? await res.clone().json().then((b: { error?: string; name?: string }) => b.error ?? b.name ?? "", () => "") : "";
+    statuses.push(`${res?.status ?? "network"}${errName ? `:${errName}` : ""}`);
     if (res?.ok) {
       const who = identityFrom(await res.json().catch(() => null));
       if (who.ok) return who;
@@ -80,7 +82,9 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
     const who = identityFrom({ payer_id: claims.payer_id, user_id: claims.sub, email: claims.email, name: claims.name });
     if (who.ok) return who;
   }
-  return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")}${token.data.id_token ? " idtoken-unusable" : " no-idtoken"}`), step: "userinfo" });
+  // Which scopes PayPal granted says whether the app's Log in with PayPal settings allow openid and email.
+  const granted = (token.data.scope ?? "").split(/\s+/).filter(Boolean).map((x) => x.replace("https://uri.paypal.com/services/", "")).join("+") || "none";
+  return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")} ${token.data.id_token ? "idtoken-unusable" : "no-idtoken"} scopes=${granted}`), step: "userinfo" });
 }
 
 function idTokenClaims(jwt: string): { sub?: string; payer_id?: string; email?: string; name?: string } | null {
