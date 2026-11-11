@@ -1,0 +1,22 @@
+# Gate 6 CI checks. Every pull request and every push to main runs them (06-quality-contract.md, "CI checks").
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Types
+        run: pnpm tsc --noEmit
+      - name: Unit tests
+        run: pnpm vitest run
+      - name: Schema matches migrations
+        run: bash scripts/check_schema.sh
+      - name: Storefront and Worker build
+        run: pnpm build:storefront && pnpm opennextjs-cloudflare build
