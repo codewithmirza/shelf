@@ -33,6 +33,7 @@
 | T-14 | MCP host allow list and rate limit | Done | TC-MCP-06 on real SQLite: 61st call per minute per address gets 429; wrong host and foreign Origin refused; addresses stored only as HMAC |
 | T-15 | Seller sign-in and store creation | Done (server) | TC-SEL-01, TC-SEL-02 on real SQLite: state check, both userinfo schemas, 7-day __Host- cookie, one seller per PayPal account, link rules and suggestions. Live sign-in waits for S-06 |
 | T-16 | Seller app screens | Done | A1 to A13 built; walked locally in a browser at 390 px: name store, empty products, upload, reading bar, failed read, Fill in yourself, price guard, publish, orders empty, store key shown once |
+| T-17 | Extraction consumer | Done | Live: 4 real photos drafted by Gemini 3.8 Flash; 2 published by the seller |
 | T-21 | Cart API v1 | Done (local) | TC-CART-02, -03, -05 and TC-CART-01 against the PayPal fake on real SQLite; scripts/cart_agent.mjs for the live run; ADR-007 amended |
 | T-22 | Try page Gemini chat (waits for S-03) | Next | — |
 | T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
@@ -57,6 +58,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 13:52 | Claude | First real store live (sandbox business seller). 4 real photos drafted by Gemini on Vertex; seller set prices and published 2. |
 | 11 Nov 13:13 | Claude | T-07 verified live: a separate sandbox business seller signed in and Shelf stored its payer ID. The app owner's own account cannot be a seller (ADR-008 amendment). App attributes cut to name, email, account ID. |
 | 11 Nov 11:55 | Claude | Review pass: two fixes pushed. Waiting on: Log in with PayPal enabled on the sandbox app, a first real store, TRY_BUYER_* vars, Vertex (S-03), the Claude connector (S-08). |
 | 11 Nov 11:54 | Claude | T-25: traceability and secret checks; TC-AI-03 added. T-27 part: README is the judge guide with the verified and not verified table. |

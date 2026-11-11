@@ -74,7 +74,7 @@ What has been proven, and how. Updated as each live check runs.
 | A full sandbox payment, approval to Paid | **Not yet verified live** | Covered by tests against a PayPal fake; live run pending |
 | Log in with PayPal round trip | Verified live | A sandbox business seller signed in; Shelf stored its payer ID. The app's own owner account cannot sign in as a seller, by design |
 | PayPal webhook delivery | **Not yet verified live** | Webhook ID is set; waiting for the first real event |
-| Photo to draft with Gemini | **Not yet verified live** | Vertex is not configured yet; the failed-read path works |
+| Photo to draft with Gemini | Verified live | Four real product photos became drafts through Gemini 3.8 Flash on Vertex AI; the seller set every price |
 | Rendering inside Claude and ChatGPT | **Not yet verified** | Needs the connector added in each assistant |
 | Cart API with a live key | **Not yet verified live** | `scripts/cart_agent.mjs` is ready |
 
