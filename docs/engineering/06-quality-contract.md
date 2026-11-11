@@ -58,7 +58,7 @@ Kinds: Unit (pure domain code), Integration (Worker runtime with local D1 via `@
 | TC-MCP-03 | SYS-MCP-02 | Integration | Every tool's text content holds the same facts as `structuredContent`. |
 | TC-MCP-04 | AC-BUY-04-01 | Integration | `get_order_status` returns state, timeline and tracking. |
 | TC-MCP-05 | AC-BUY-05-01 to 03, INV-06 | Integration | A second `request_refund` returns the first request. |
-| TC-MCP-06 | SYS-MCP-08 | Integration | A wrong host is refused; the 61st call in a minute from one address gets 429. |
+| TC-MCP-06 | SYS-MCP-08 | Integration | A wrong host is refused; the 301st call in a minute from one address gets 429. (Changed from 61 on 11 Nov 2026: hosts call from shared addresses and checkout polls 20 times a minute.) |
 | TC-CART-01 | SYS-CART-01, SYS-CART-04 | Contract | The agent script creates, replaces, reads and checks out a cart against a sandbox approval. |
 | TC-CART-02 | SYS-CART-02 | Integration | PUT replaces; old lines are gone. |
 | TC-CART-03 | SYS-CART-03 | Integration | Out of stock gives 200 with an issue; unknown cart 404; bad body 400; not approved 422. |

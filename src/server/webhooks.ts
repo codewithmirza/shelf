@@ -14,7 +14,8 @@ export interface WebhookRepo {
 export interface WebhookDeps extends CheckoutDeps {
   readonly webhooks: WebhookRepo;
   // PayPal's verify-webhook-signature call (SYS-PAY-04).
-  verify(headers: Headers, event: WebhookEvent): Promise<Result<true, DomainError>>;
+  // Gets the event exactly as received, never a parsed copy (the signature covers every field).
+  verify(headers: Headers, original: unknown): Promise<Result<true, DomainError>>;
 }
 
 export type WebhookOutcome =
@@ -40,7 +41,7 @@ export async function handleWebhook(deps: WebhookDeps, headers: Headers, rawBody
   if (!parsed.success) return err(domainError("request.invalid", "event shape"));
   const event = parsed.data;
 
-  const verified = await deps.verify(headers, event);
+  const verified = await deps.verify(headers, parsedJson);
   if (!verified.ok) return verified;
 
   if (await deps.webhooks.seen(event.id)) return ok({ kind: "ignored", reason: "duplicate" });

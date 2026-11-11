@@ -6,9 +6,10 @@ export interface Limit {
   readonly windowMs: number;
 }
 
-// TC-MCP-06: the 61st MCP call in a minute from one address gets 429.
+// TC-MCP-06: the 301st MCP call in a minute from one address gets 429. Hosts like Claude call from a few
+// shared server addresses, and one open checkout polls 20 times a minute, so 60 would throttle real buyers.
 export const LIMITS = {
-  mcp: { name: "mcp", max: 60, windowMs: 60_000 },
+  mcp: { name: "mcp", max: 300, windowMs: 60_000 },
   try: { name: "try", max: 30, windowMs: 60 * 60_000 },
 } as const satisfies Record<string, Limit>;
 

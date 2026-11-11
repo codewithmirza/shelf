@@ -5,10 +5,10 @@ import { sqliteD1 } from "../support/d1";
 const SECRET = "test-secret-test-secret-test-secret-1234";
 
 describe("MCP guard (TC-MCP-06, THR-09)", () => {
-  it("TC-MCP-06: the 61st call in a minute from one address gets 429; another address is unaffected", async () => {
+  it("TC-MCP-06: the 301st call in a minute from one address gets 429; another address is unaffected", async () => {
     const store = d1RateStore(sqliteD1());
     const now = new Date("2026-11-11T10:00:05Z");
-    for (let i = 0; i < 60; i++) expect((await checkRate(store, LIMITS.mcp, "203.0.113.7", SECRET, now)).allowed).toBe(true);
+    for (let i = 0; i < LIMITS.mcp.max; i++) expect((await checkRate(store, LIMITS.mcp, "203.0.113.7", SECRET, now)).allowed).toBe(true);
     expect(await checkRate(store, LIMITS.mcp, "203.0.113.7", SECRET, now)).toEqual({ allowed: false, retryAfterS: 55 });
     expect((await checkRate(store, LIMITS.mcp, "198.51.100.1", SECRET, now)).allowed).toBe(true);
     // The next window starts fresh.

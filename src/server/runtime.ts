@@ -44,8 +44,8 @@ export function webhookDeps(env: ShelfEnv): WebhookDeps {
   return {
     ...checkoutDeps(env),
     webhooks: d1WebhookRepo(env.DB),
-    async verify(headers, event) {
-      const r = await verifyWebhook(pp, env.PAYPAL_WEBHOOK_ID, headers, event);
+    async verify(headers, original) {
+      const r = await verifyWebhook(pp, env.PAYPAL_WEBHOOK_ID, headers, original);
       // A refused signature is the caller's fault (400); PayPal not answering is ours (502), so PayPal retries.
       if (r.ok) return ok(true);
       return r.error.code === "request.invalid" || r.error.code === "paypal.refused" ? err(domainError("request.invalid", r.error.detail)) : err(r.error);

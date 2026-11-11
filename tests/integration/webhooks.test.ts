@@ -100,6 +100,15 @@ describe("Webhooks (TC-PAY-04)", () => {
     expect(w.verifyCalls()).toBe(2);
   });
 
+  it("SYS-PAY-04: verification gets the event exactly as PayPal sent it, unknown fields included", async () => {
+    const w = world();
+    let seen: unknown = null;
+    w.deps.verify = async (_h, original) => { seen = original; return ok(true); };
+    const body = { id: "WH-RAW", event_type: "PAYMENT.CAPTURE.COMPLETED", create_time: "2026-11-11T10:00:00Z", summary: "Payment completed", links: [{ rel: "self" }], resource: { id: "C", extra: 1 } };
+    await handleWebhook(w.deps, new Headers(), JSON.stringify(body));
+    expect(seen).toEqual(body);
+  });
+
   it("finds the PayPal order id in both event families", () => {
     expect(paypalOrderIdOf({ id: "e", event_type: "CHECKOUT.ORDER.APPROVED", resource: { id: "PP1" } })).toBe("PP1");
     expect(paypalOrderIdOf({ id: "e", event_type: "PAYMENT.CAPTURE.COMPLETED", resource: { id: "CAP", supplementary_data: { related_ids: { order_id: "PP2" } } } })).toBe("PP2");

@@ -115,6 +115,14 @@ describe("PayPal client", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("TC-PAY-04 (unit): the verify call carries the original event, not a trimmed copy", async () => {
+    const { deps, calls } = fakeDeps([token(), json(200, { verification_status: "SUCCESS" })]);
+    const h = new Headers({ "paypal-auth-algo": "a", "paypal-cert-url": "c", "paypal-transmission-id": "t", "paypal-transmission-sig": "s", "paypal-transmission-time": "now" });
+    const original = { id: "E1", event_type: "X", create_time: "t", resource_type: "capture", resource: { a: 1 } };
+    expect((await verifyWebhook(deps, "WH1", h, original)).ok).toBe(true);
+    expect(JSON.parse(String(calls[1]!.init.body)).webhook_event).toEqual(original);
+  });
+
   it("TC-PAY-04 (unit): FAILURE from PayPal refuses the webhook", async () => {
     const { deps } = fakeDeps([token(), json(200, { verification_status: "FAILURE" })]);
     const h = new Headers({ "paypal-auth-algo": "a", "paypal-cert-url": "c", "paypal-transmission-id": "t", "paypal-transmission-sig": "s", "paypal-transmission-time": "now" });

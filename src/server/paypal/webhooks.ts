@@ -22,7 +22,9 @@ export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 const TRANSMISSION_HEADERS = ["paypal-auth-algo", "paypal-cert-url", "paypal-transmission-id", "paypal-transmission-sig", "paypal-transmission-time"] as const;
 
 // Asks PayPal whether the webhook is genuine. No state changes until this says SUCCESS (SYS-PAY-04, THR-02).
-export async function verifyWebhook(deps: PayPalDeps, webhookId: string, headers: Headers, event: WebhookEvent): Promise<Result<true, PayPalFailure>> {
+// `original` must be the event exactly as PayPal sent it: PayPal checks the signature over the full body,
+// and a parsed copy without unknown fields would always fail.
+export async function verifyWebhook(deps: PayPalDeps, webhookId: string, headers: Headers, original: unknown): Promise<Result<true, PayPalFailure>> {
   const h: Record<string, string> = {};
   for (const name of TRANSMISSION_HEADERS) {
     const value = headers.get(name);
@@ -39,7 +41,7 @@ export async function verifyWebhook(deps: PayPalDeps, webhookId: string, headers
       transmission_sig: h["paypal-transmission-sig"],
       transmission_time: h["paypal-transmission-time"],
       webhook_id: webhookId,
-      webhook_event: event,
+      webhook_event: original,
     },
     schema: z.object({ verification_status: z.enum(["SUCCESS", "FAILURE"]) }),
   });
