@@ -6,6 +6,7 @@ import type { ExtractionMessage, ShelfEnv } from "./env";
 import { createShelfServer } from "./server/mcp/server";
 import { checkoutDeps, mcpDeps } from "./server/runtime";
 import { reconcile } from "./server/reconcile";
+import { LIMITS, checkCaller, checkRate, clientAddress, d1RateStore, sweepRateLimits, tooMany } from "./server/ratelimit";
 
 const MCP_ROUTE = "/mcp";
 
@@ -20,6 +21,13 @@ export default {
     const url = new URL(request.url);
     const env = withOrigin(rawEnv, url.origin);
     if (url.pathname === MCP_ROUTE) {
+      // THR-09: own hostnames only, no cross-site browser calls, and a per-address limit (SYS-MCP-08).
+      const caller = checkCaller(request, env.PUBLIC_ORIGIN);
+      if (caller !== "ok") return Response.json({ error: { code: "request.invalid", message: "Something in this request isn't right." } }, { status: 403 });
+      if (request.method === "POST") {
+        const rate = await checkRate(d1RateStore(env.DB), LIMITS.mcp, clientAddress(request), env.TOKEN_SECRET, new Date());
+        if (!rate.allowed) return tooMany(rate.retryAfterS);
+      }
       // A new handler per request lets the server factory see this request's env, with no session store.
       const handler = createMcpHandler(() => createShelfServer(mcpDeps(env)), { route: MCP_ROUTE });
       return handler(request, env, ctx);
@@ -34,6 +42,10 @@ export default {
 
   // Every 5 minutes: agree with PayPal on open orders, cancel unpaid ones, expire old carts (SYS-PAY-09).
   async scheduled(_controller: ScheduledController, env: ShelfEnv, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(reconcile(checkoutDeps(env)).then((report) => console.log(JSON.stringify({ level: "info", job: "reconcile", ...report }))));
+    ctx.waitUntil(
+      Promise.all([reconcile(checkoutDeps(env)), sweepRateLimits(env.DB, new Date())]).then(([report, swept]) =>
+        console.log(JSON.stringify({ level: "info", job: "reconcile", ...report, rateBucketsSwept: swept })),
+      ),
+    );
   },
 } satisfies ExportedHandler<ShelfEnv, ExtractionMessage>;

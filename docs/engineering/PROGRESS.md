@@ -29,7 +29,8 @@
 | T-11 | Webhooks and the reconciler | Done | TC-PAY-04, TC-PAY-09 on fakes and on real SQLite with the migration (tests/support/d1.ts). Live webhook waits for S-07 |
 | T-12 | get_order_status and request_refund | Done | TC-MCP-04, TC-MCP-05, TC-SEC-02 over MCP on real SQLite; INV-06 held by the unique index |
 | T-13 | Storefront views from the design system | Done | Five views + error, built to Figma S1 to S12; explicit state machine (tests/unit/storefront_machine.test.ts); checked in a host bridge: search, product, cart, Pay; order views and the Paid moment with polling in a fixture host (out of repo). 483 KB single file |
-| T-14 | MCP host allow list and rate limit | Next | — |
+| T-14 | MCP host allow list and rate limit | Done | TC-MCP-06 on real SQLite: 61st call per minute per address gets 429; wrong host and foreign Origin refused; addresses stored only as HMAC |
+| T-15 | Seller sign-in and store creation | Next | — |
 | T-22 | Try page | In progress | Search-box host done and checked locally; Gemini chat waits for S-03 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
@@ -50,6 +51,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 11:29 | Claude | T-14: /mcp guard: own host only, no cross-site browser calls, 60 per minute per address in D1 (keyed hash, swept by the cron). |
 | 11 Nov 11:28 | Claude | T-22 started with T-13. |
 | 11 Nov 11:28 | Claude | T-13: Storefront views (results, product, cart, checkout with open-link and 3 s polling, order, refund ask), Paid moment, host theme. T-22 part: Try page hosts the Storefront through AppBridge with the search box (ADR-010); Gemini chat waits for S-03. |
 | 11 Nov 11:18 | Claude | T-12: order status read model (no email, address or PayPal ids), buyer timeline text, refund request that returns the first pending one. |
