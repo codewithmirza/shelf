@@ -5,18 +5,15 @@ import { CART_TTL_MS, planCartWrite, upsertCart, type StoredCart } from "@/serve
 import { CART_STATES } from "@/server/domain/machines";
 import { variantId } from "@/server/domain/brand";
 import { rpc } from "./mcp_surface.test";
-import { MAYA, RIVER, fakeCatalog, fakeIds, memoryCartRepo, variant } from "../support/fakes";
+import { MAYA, fakeCatalog, testWorld } from "../support/fakes";
 
 const mug: ProductDetailRow = {
   id: "prd_demo_mug", title: "Blue speckled mug", description: "Wheel-thrown.", imageKeys: [],
   variants: [{ id: "var_s", options: { Size: "Small" }, priceCents: cents(2400), stock: 8 }, { id: "var_l", options: { Size: "Large" }, priceCents: cents(3200), stock: 0 }],
   store: { slug: MAYA.slug, name: MAYA.name, refundPolicy: MAYA.refundPolicy },
 };
-const setup = () => {
-  const repo = memoryCartRepo([MAYA, RIVER], [variant("var_s", MAYA, 2400, 8), variant("var_l", MAYA, 3200, 5), variant("var_sold", MAYA, 1800, 0), variant("var_river", RIVER, 4500)]);
-  return { repo, ids: fakeIds() };
-};
-const call = (deps: ReturnType<typeof setup>, name: string, args: unknown) => rpc(fakeCatalog([], [mug]).catalog, "tools/call", { name, arguments: args }, deps);
+const setup = () => testWorld(fakeCatalog([], [mug]).catalog);
+const call = (w: ReturnType<typeof setup>, name: string, args: unknown) => rpc(w.deps, "tools/call", { name, arguments: args });
 
 describe("Buyer tools (T-09)", () => {
   it("TC-MCP-03 (show_product): text and structuredContent hold the same facts", async () => {
@@ -95,7 +92,7 @@ describe("Buyer tools (T-09)", () => {
 
   it("ADR-003: a write that lost the race answers cart.version_conflict", async () => {
     const deps = setup();
-    const created = await upsertCart(deps, { cartId: undefined, storeSlug: "maya-mugs", items: [], channel: "storefront", actor: "buyer" });
+    const created = await upsertCart(deps.deps.carts, { cartId: undefined, storeSlug: "maya-mugs", items: [], channel: "storefront", actor: "buyer" });
     if (!created.ok) throw new Error("create failed");
     const realReplace = deps.repo.replace;
     deps.repo.replace = async (c, expected, items, now) => {
@@ -104,7 +101,7 @@ describe("Buyer tools (T-09)", () => {
       deps.repo.carts.set(c.id, { ...cur, version: cur.version + 1 });
       return realReplace(c, expected, items, now);
     };
-    const r = await upsertCart(deps, { cartId: created.value.cart.id, storeSlug: "maya-mugs", items: [], channel: "storefront", actor: "buyer" });
+    const r = await upsertCart(deps.deps.carts, { cartId: created.value.cart.id, storeSlug: "maya-mugs", items: [], channel: "storefront", actor: "buyer" });
     expect(r.ok ? null : r.error.code).toBe("cart.version_conflict");
   });
 });

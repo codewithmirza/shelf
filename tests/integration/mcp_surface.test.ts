@@ -3,7 +3,8 @@ import { createMcpHandler } from "@modelcontextprotocol/server";
 import { readFileSync } from "node:fs";
 import { cents } from "@/server/domain/brand";
 import type { Catalog, ProductCardRow } from "@/server/catalog";
-import { fakeCatalog, fakeIds, memoryCartRepo } from "../support/fakes";
+import { fakeCatalog, testWorld } from "../support/fakes";
+import type { ShelfMcpDeps } from "@/server/mcp/server";
 import { createShelfServer } from "@/server/mcp/server";
 import { STOREFRONT_URI } from "@/server/mcp/ui";
 import { VERSION } from "@/version";
@@ -14,8 +15,9 @@ const row = (id: string, title: string, price: number, store = "maya-mugs"): Pro
 });
 
 // Drives the real server over stateless Streamable HTTP, as Claude and ChatGPT do (SYS-MCP-01).
-export async function rpc(catalog: Catalog, method: string, params: unknown = {}, carts = { repo: memoryCartRepo([], []), ids: fakeIds() }) {
-  const handler = createMcpHandler(() => createShelfServer({ catalog, carts, origin: ORIGIN, version: VERSION }));
+export async function rpc(catalogOrDeps: Catalog | ShelfMcpDeps, method: string, params: unknown = {}) {
+  const deps: ShelfMcpDeps = "searchProducts" in catalogOrDeps ? { ...testWorld(catalogOrDeps).deps, origin: ORIGIN, version: VERSION } : catalogOrDeps;
+  const handler = createMcpHandler(() => createShelfServer(deps));
   const res = await handler.fetch(
     new Request(`${ORIGIN}/mcp`, {
       method: "POST",
@@ -44,6 +46,7 @@ describe("MCP surface (TC-MCP-01)", () => {
       search_products: { readOnlyHint: true },
       show_product: { readOnlyHint: true },
       update_cart: { idempotentHint: true, readOnlyHint: false },
+      start_checkout: { readOnlyHint: false, destructiveHint: false },
     };
     for (const [name, annotations] of Object.entries(expected)) {
       const tool = byName.get(name) as { _meta: any; annotations: any } | undefined;

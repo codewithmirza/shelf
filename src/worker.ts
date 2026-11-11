@@ -4,10 +4,7 @@ import { createMcpHandler } from "agents/mcp/server";
 import openNext from "../.open-next/worker.js";
 import type { ExtractionMessage, ShelfEnv } from "./env";
 import { createShelfServer } from "./server/mcp/server";
-import { d1Catalog } from "./server/catalog";
-import { d1CartRepo } from "./server/carts";
-import { webIdSource } from "./server/domain/ids";
-import { VERSION } from "./version";
+import { mcpDeps } from "./server/runtime";
 
 const MCP_ROUTE = "/mcp";
 
@@ -16,7 +13,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === MCP_ROUTE) {
       // A new handler per request lets the server factory see this request's env, with no session store.
-      const handler = createMcpHandler(() => createShelfServer({ catalog: d1Catalog(env.DB), carts: { repo: d1CartRepo(env.DB), ids: webIdSource }, origin: env.PUBLIC_ORIGIN, version: VERSION }), { route: MCP_ROUTE });
+      const handler = createMcpHandler(() => createShelfServer(mcpDeps(env)), { route: MCP_ROUTE });
       return handler(request, env, ctx);
     }
     return (openNext as ExportedHandler<ShelfEnv>).fetch!(request as never, env, ctx);

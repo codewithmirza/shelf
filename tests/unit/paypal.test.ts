@@ -39,7 +39,7 @@ describe("PayPal client", () => {
   it("TC-PAY-01 (unit): create order sends server totals, payee and PayPal-Request-Id", async () => {
     const { deps, calls } = fakeDeps([token(), json(201, orderBody)]);
     const res = await createOrder(deps, {
-      cartId: "CART-ABCDEFGHJKLM", orderId: "ord_1", payeeEmail: "maya@example.com", storeName: "Maya Mugs",
+      cartId: "CART-ABCDEFGHJKLM", payeeEmail: "maya@example.com", storeName: "Maya Mugs",
       lines: [{ name: "Speckled mug", sku: "MUG-S", quantity: 2, unitPriceCents: cents(2400) }],
       subtotalCents: cents(4800), shippingCents: cents(600), totalCents: cents(5400),
       returnUrl: "https://shelf.test/pay/return", cancelUrl: "https://shelf.test/pay/cancel", requestId: "order:CART-ABCDEFGHJKLM:v1",

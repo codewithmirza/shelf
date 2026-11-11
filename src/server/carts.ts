@@ -38,6 +38,9 @@ export interface CartRepo {
   insert(cart: StoredCart, items: readonly CartItemInput[], now: string): Promise<void>;
   // Writes only if the stored version is still `expectedVersion` (ADR-003). False means someone else wrote first.
   replace(cart: StoredCart, expectedVersion: number, items: readonly CartItemInput[], now: string): Promise<boolean>;
+  // T-CRT-04: Ready to Checking out, only if the cart is still Ready at this version. The version stays,
+  // so the PayPal request ID built from it stays the same on a retry.
+  startCheckout(id: CartId, version: number, now: string): Promise<boolean>;
 }
 
 export type CartPlan =
@@ -197,6 +200,10 @@ export function d1CartRepo(db: D1Database): CartRepo {
         )
         .bind(JSON.stringify(items), JSON.stringify(c.lines), c.subtotalCents, c.shippingCents, c.totalCents, JSON.stringify(c.issues), c.state, c.version, c.expiresAt, now, c.id, expectedVersion)
         .run();
+      return res.meta.changes === 1;
+    },
+    async startCheckout(id, version, now) {
+      const res = await db.prepare("UPDATE carts SET state = 'checking_out', updated_at = ? WHERE id = ? AND version = ? AND state = 'ready'").bind(now, id, version).run();
       return res.meta.changes === 1;
     },
   };
