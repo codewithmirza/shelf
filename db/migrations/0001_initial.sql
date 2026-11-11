@@ -2,12 +2,13 @@
 -- Every table, column and constraint here is specified in docs/engineering/04-data-contract.md.
 -- Money is stored in integer cents, so no floating-point rounding can change a total (INV-01).
 -- Times are ISO 8601 text in UTC, because D1 (SQLite) has no time type.
+-- TEXT primary keys say NOT NULL: SQLite otherwise allows a NULL primary key on a non-integer key.
 
 PRAGMA foreign_keys = ON;
 
 -- TAB-01 sellers: one row per PayPal account that signed in.
 CREATE TABLE sellers (
-  id TEXT PRIMARY KEY,                         -- 'sel_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'sel_' + ULID
   paypal_account_id TEXT NOT NULL UNIQUE,      -- from Log in with PayPal user info
   paypal_email TEXT NOT NULL,                  -- the payee email for orders (ADR-008)
   display_name TEXT NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE sellers (
 
 -- TAB-02 sessions: seller sign-in sessions; the cookie holds the id, never the seller id.
 CREATE TABLE sessions (
-  id TEXT PRIMARY KEY,                         -- 32 random bytes, base64url
+  id TEXT NOT NULL PRIMARY KEY,                         -- 32 random bytes, base64url
   seller_id TEXT NOT NULL REFERENCES sellers(id) ON DELETE CASCADE,
   expires_at TEXT NOT NULL,
   created_at TEXT NOT NULL
@@ -25,7 +26,7 @@ CREATE INDEX sessions_seller ON sessions(seller_id);
 
 -- TAB-03 stores: one store per seller in R1.
 CREATE TABLE stores (
-  id TEXT PRIMARY KEY,                         -- 'sto_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'sto_' + ULID
   seller_id TEXT NOT NULL UNIQUE REFERENCES sellers(id),
   slug TEXT NOT NULL UNIQUE CHECK (slug GLOB '[a-z0-9]*' AND length(slug) BETWEEN 3 AND 40),
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60),
@@ -38,7 +39,7 @@ CREATE TABLE stores (
 
 -- TAB-04 store_keys: Cart API keys; only the SHA-256 hash is stored (SYS-CART-05).
 CREATE TABLE store_keys (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL PRIMARY KEY,
   store_id TEXT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
   key_hash TEXT NOT NULL UNIQUE,
   label TEXT NOT NULL,
@@ -48,7 +49,7 @@ CREATE TABLE store_keys (
 
 -- TAB-05 photos: uploaded images and their extraction.
 CREATE TABLE photos (
-  id TEXT PRIMARY KEY,                         -- 'pho_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'pho_' + ULID
   store_id TEXT NOT NULL REFERENCES stores(id),
   r2_key TEXT NOT NULL UNIQUE,
   content_type TEXT NOT NULL CHECK (content_type IN ('image/jpeg','image/png','image/webp','image/heic')),
@@ -64,7 +65,7 @@ CREATE INDEX photos_store_state ON photos(store_id, state);
 
 -- TAB-06 products.
 CREATE TABLE products (
-  id TEXT PRIMARY KEY,                         -- 'prd_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'prd_' + ULID
   store_id TEXT NOT NULL REFERENCES stores(id),
   title TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 120),
   description TEXT NOT NULL DEFAULT '' CHECK (length(description) <= 2000),
@@ -83,7 +84,7 @@ CREATE INDEX products_store_state ON products(store_id, state);
 
 -- TAB-07 variants: price_cents is NULL until the seller confirms it (INV-03).
 CREATE TABLE variants (
-  id TEXT PRIMARY KEY,                         -- 'var_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'var_' + ULID
   product_id TEXT NOT NULL REFERENCES products(id),
   sku TEXT NOT NULL UNIQUE,
   options_json TEXT NOT NULL DEFAULT '{}',     -- for example {"Size":"Large"}
@@ -95,7 +96,7 @@ CREATE INDEX variants_product ON variants(product_id);
 
 -- TAB-08 carts.
 CREATE TABLE carts (
-  id TEXT PRIMARY KEY CHECK (id GLOB 'CART-[A-Z0-9]*'),
+  id TEXT NOT NULL PRIMARY KEY CHECK (id GLOB 'CART-[A-Z0-9]*'),
   store_id TEXT NOT NULL REFERENCES stores(id),
   channel TEXT NOT NULL CHECK (channel IN ('storefront','cart_api','try')),
   items_json TEXT NOT NULL,                    -- [{variant_id, quantity}] as the caller sent them
@@ -115,7 +116,7 @@ CREATE INDEX carts_state_expiry ON carts(state, expires_at);
 
 -- TAB-09 orders.
 CREATE TABLE orders (
-  id TEXT PRIMARY KEY,                         -- 'ord_' + ULID
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'ord_' + ULID
   store_id TEXT NOT NULL REFERENCES stores(id),
   cart_id TEXT NOT NULL UNIQUE REFERENCES carts(id),
   cart_version INTEGER NOT NULL,
@@ -137,7 +138,7 @@ CREATE INDEX orders_state_updated ON orders(state, updated_at);
 
 -- TAB-10 refund_requests.
 CREATE TABLE refund_requests (
-  id TEXT PRIMARY KEY,                         -- 'rfd_' + ULID; also the PayPal-Request-Id of the refund call
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'rfd_' + ULID; also the PayPal-Request-Id of the refund call
   order_id TEXT NOT NULL REFERENCES orders(id),
   reason TEXT NOT NULL CHECK (length(reason) BETWEEN 1 AND 500),
   amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
@@ -154,7 +155,7 @@ CREATE UNIQUE INDEX refund_one_pending ON refund_requests(order_id) WHERE state 
 
 -- TAB-11 events: the order timeline; append only (INV-09).
 CREATE TABLE events (
-  id TEXT PRIMARY KEY,                         -- 'evt_' + ULID, so ids sort by time
+  id TEXT NOT NULL PRIMARY KEY,                         -- 'evt_' + ULID, so ids sort by time
   order_id TEXT NOT NULL REFERENCES orders(id),
   actor TEXT NOT NULL CHECK (actor IN ('agent','buyer','seller','paypal','system')),
   type TEXT NOT NULL,                          -- for example 'order.created', 'order.captured', 'refund.requested'
@@ -165,7 +166,7 @@ CREATE INDEX events_order ON events(order_id, id);
 
 -- TAB-12 webhook_events: PayPal webhook ids, so a repeat changes nothing (INV-08).
 CREATE TABLE webhook_events (
-  paypal_event_id TEXT PRIMARY KEY,
+  paypal_event_id TEXT NOT NULL PRIMARY KEY,
   event_type TEXT NOT NULL,
   resource_id TEXT,
   received_at TEXT NOT NULL
@@ -173,7 +174,7 @@ CREATE TABLE webhook_events (
 
 -- TAB-13 push_subscriptions: Web Push endpoints of a seller's devices.
 CREATE TABLE push_subscriptions (
-  id TEXT PRIMARY KEY,
+  id TEXT NOT NULL PRIMARY KEY,
   seller_id TEXT NOT NULL REFERENCES sellers(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL UNIQUE,
   p256dh TEXT NOT NULL,
@@ -183,7 +184,7 @@ CREATE TABLE push_subscriptions (
 
 -- TAB-14 rate_limits: fixed-window counters for the Try chat and the MCP endpoint (THR-09).
 CREATE TABLE rate_limits (
-  bucket TEXT PRIMARY KEY,                     -- for example 'try:<ip-hash>:<hour>'
+  bucket TEXT NOT NULL PRIMARY KEY,                     -- for example 'try:<ip-hash>:<hour>'
   count INTEGER NOT NULL,
   expires_at TEXT NOT NULL
 );

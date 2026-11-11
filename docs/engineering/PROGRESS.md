@@ -19,11 +19,11 @@
 | Task | Title | State | Evidence |
 | --- | --- | --- | --- |
 | T-01 | Scaffold the repository and the one-Worker entry | Done (deploy waits for S-02) | `evidence/SPK-01.md` |
-| T-02 | D1 migration, Drizzle schema, seed loader | Next | — |
+| T-02 | D1 migration, Drizzle schema, seed loader | Done (remote apply waits for S-02) | `pnpm db:check`: schema match, 14 tables; seed applied to local D1 |
 | T-03 | PayPal REST client | Ready | — |
 | T-04 | Vertex client and extraction schema | Ready | — |
 | T-05 | MCP server and Storefront resource | Ready | — |
-| T-08 | Domain rules | Waiting for T-02 | — |
+| T-08 | Domain rules | Next | — |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -43,6 +43,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 11 Nov 07:35 | Claude | T-02: Drizzle schema matches the migration (new `pnpm db:check`). Fixed nullable TEXT primary keys in 0001 before any apply. Seed: 2 demo stores, 6 products, 7 variants. |
 | 11 Nov 07:10 | Claude | T-01: scaffold, one Worker serves Next.js and /mcp; SPK-01 passes locally (972 KiB gzip). |
 | 11 Nov 06:30 | Claude | Added backend and API code quality rules CQ-21 to CQ-34 (Brandur Leach, Alexis King). Updated version pins (ADR-011). Created this file. |
 
