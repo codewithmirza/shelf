@@ -23,6 +23,7 @@
     "PAYPAL_BASE": "https://api-m.sandbox.paypal.com",
     // The sandbox client ID is public by design (the Pay page sends it to browsers). The secret stays a Worker secret.
     "PAYPAL_CLIENT_ID": "ATCYFnoau1r-G6IRyt_A9I5HFH_eLi9BE06ZgtremrIBjcLMpmcV6FLlmWvAVJ2dqxTZ0KI1NKeU1WW2",
+    "PAYPAL_WEBHOOK_ID": "7HR55136S1176423F",
     // One origin, no trailing slash. Local runs override it in .dev.vars.
     "PUBLIC_ORIGIN": "https://shelf.160422733171.workers.dev"
   }
