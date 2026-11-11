@@ -20,7 +20,7 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 | What "done" means for a flow | Gate 1, `01-product-contract.md` |
 | Words, states, invariants, who may do what | Gate 2, `02-domain-contract.md` |
 | Containers, stack, threats, ADRs | Gate 3, `03-architecture-contract.md`, `adr/` |
-| Tables, write rules, seed | Gate 4, `04-data-contract.md`, `db/` |
+| Tables, write rules, data rules | Gate 4, `04-data-contract.md`, `db/` |
 | MCP tools, routes, Cart API, errors | Gate 5, `05-interface-contract.md`, `api/` |
 | Spikes, tests, CI, deploy, demo | Gate 6, `06-quality-contract.md` |
 | Tasks, lanes, done, cut order | Gate 7, `07-implementation-contract.md`, `tasks.yaml` |
@@ -39,7 +39,7 @@ What Shelf is and what it must do live in `docs/product/`: [Concept](docs/produc
 8. **Generated files are never edited by hand:** `src/server/mcp/storefront.generated.ts`.
 9. **The UI uses only the design system tokens.** No colour, size, radius or duration literal outside `tokens.css`.
 10. **No secret in code, logs, tests or the Storefront.** Secrets come from Worker secrets only.
-11. **No fake data shown as real.** Demo stores are marked as demo. Never claim an unmeasured number.
+11. **No mock data.** Nothing invented reaches a real database, a page or the video: no demo stores, sample products or placeholder sellers. Stores and products come only from real sellers through the Seller app. Invented records live only in `tests/fixtures/` and are loaded only by tests. Never claim an unmeasured number.
 12. **No duplicate.** Search before you add a helper or a type.
 13. **No implicit state machines.** Anything with more than two states has one `state` field typed as a union and one transition table; never a mix of booleans, nullable fields or timestamps (CQ-01).
 14. **Follow the code quality rules** in `docs/engineering/code-quality.md` (CQ-01 to CQ-34): frontend rules from Emil Kowalski, backend and API rules from Brandur Leach and Alexis King. A reviewer rejects with the rule ID.

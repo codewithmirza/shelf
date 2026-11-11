@@ -8,7 +8,7 @@ import { d1WebhookRepo } from "@/server/webhooks";
 import { sqliteD1 } from "../support/d1";
 import { TOKEN_SECRET, fakeIds, fakePayPal } from "../support/fakes";
 
-// The D1 adapters with their real SQL, on the real migration and seed (TC-MCP-02 and the guarded batches).
+// The D1 adapters with their real SQL, on the real migration and the test fixture catalog (TC-MCP-02 and the guarded batches).
 function d1World() {
   const db = sqliteD1(true);
   const ids = fakeIds();
@@ -110,7 +110,7 @@ describe("D1 adapters on the real schema", () => {
     expect(await repo.seen("WH-1")).toBe(true);
   });
 
-  it("the seed has confirmed prices only on published products (INV-03)", async () => {
+  it("the test fixture has confirmed prices only on published products (INV-03)", async () => {
     const { q } = d1World();
     expect(await q("SELECT COUNT(*) AS n FROM variants v JOIN products p ON p.id = v.product_id WHERE p.state = 'published' AND v.price_cents IS NULL")).toEqual([{ n: 0 }]);
     void (null as unknown as CartId);

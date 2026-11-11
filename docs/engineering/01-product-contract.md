@@ -277,7 +277,7 @@ Sources: `docs/product/02-PRD.md`, `docs/product/03-SyRS.md`. Copy in quotes is 
 
 | ID | Given / When / Then | Covers | Test |
 | --- | --- | --- | --- |
-| AC-JDG-01-01 | Given the Try page, then it shows a chat box, two demo stores and the sandbox buyer login. | PR-JDG-01, PR-JDG-02 | TC-E2E-01 |
+| AC-JDG-01-01 | Given the Try page, then it shows a chat box, the stores real sellers have published, and the sandbox buyer login. | PR-JDG-01, PR-JDG-02 | TC-E2E-01 |
 | AC-JDG-01-02 | Given the Try page, when Jo runs the buy path, then the same Storefront HTML and the same tools run as in Claude. | PR-JDG-01 | TC-E2E-01 |
 | AC-JDG-01-03 | Given any order, then its timeline shows each actor and step. | PR-JDG-04, NFR-OPS-02 | TC-E2E-01 |
 

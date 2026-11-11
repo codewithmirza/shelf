@@ -1,3 +1,5 @@
+-- TEST FIXTURE ONLY. Invented stores and products for automated tests (tests/support/d1.ts).
+-- Never load this into a real database (AGENTS.md rule 11). Real stores come only from real sellers.
 -- Gate 4 seed: two demo stores for the Try page and tests. Runs on local and sandbox only.
 -- The payee emails are placeholders until the founder creates the US sandbox seller accounts (deferred-setup S-05);
 -- replace them with: UPDATE sellers SET paypal_email = '<sandbox email>' WHERE id = 'sel_demo_maya';

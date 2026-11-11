@@ -100,7 +100,7 @@ Status: written 10 Nov 2026. Sources: `00-concept.md` and the founders' private 
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
-| PR-JDG-01 | The Try page runs the same Storefront in a hosted page with a chat box, against two seeded demo stores. | Must |
+| PR-JDG-01 | The Try page runs the same Storefront in a hosted page with a chat box, against the stores real sellers have published (no mock data). | Must |
 | PR-JDG-02 | The Try page shows the sandbox buyer login to use. | Must |
 | PR-JDG-03 | The README gives a five-minute judge path, the architecture, and a "verified and not verified" table. | Must |
 | PR-JDG-04 | Each order shows a timeline of who did what: the agent, the buyer, the seller, PayPal. | Should |

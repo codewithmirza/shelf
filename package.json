@@ -21,7 +21,6 @@
     "db:migrate:remote": "wrangler d1 migrations apply shelf --remote",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:check": "bash scripts/check_schema.sh",
-    "db:seed:local": "wrangler d1 execute shelf --local --file db/seed.sql",
     "check": "tsc --noEmit && vitest run && bash scripts/check_schema.sh"
   },
   "dependencies": {

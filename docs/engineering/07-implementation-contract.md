@@ -23,7 +23,7 @@
 | M0 | Foundations and spikes SPK-01 to SPK-07 | 11 Nov 09:00 | — |
 | M1 | Buyer path end to end in Claude | 11 Nov 20:00 | FL-BUY-01 to FL-BUY-05 |
 | M2 | Seller app | 12 Nov 02:00 | FL-SEL-01 to FL-SEL-05 |
-| M3 | Cart API, Try page, seed, landing | 12 Nov 13:00 | FL-AGT-01, FL-JDG-01 |
+| M3 | Cart API, Try page, first real stores, landing | 12 Nov 13:00 | FL-AGT-01, FL-JDG-01 |
 | M4 | CI, checks, README, video, submit | 12 Nov 22:00 | — |
 
 ## The plan in numbers
@@ -88,8 +88,7 @@ The longest chain is T-01 → T-02 → T-08 → T-09 → T-10 → T-11 → T-18 
 2. PayPal Catalog Products sync (Should in ADR-004).
 3. The Gemini chat in the Try page. Use the search box fallback.
 4. ChatGPT on video. Show Claude only, and say so in the README.
-5. Log in with PayPal. Use the "Demo seller" sign-in for the seeded stores (ADR-008).
-6. Never cut: server totals, webhook verification, seller-approved refunds, the README "verified and not verified" table.
+5. Never cut: server totals, webhook verification, seller-approved refunds, the README "verified and not verified" table.
 
 ## Commit and pull request rules
 

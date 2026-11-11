@@ -1,12 +1,12 @@
 # Gate 4 · Data contract
 
-> **What this is.** The tables, the constraints, how writes stay consistent, the seed data and the migration rules for D1.
+> **What this is.** The tables, the constraints, how writes stay consistent, the data rules and the migration rules for D1.
 >
 > **Why it comes here.** Gates 2 and 3 fixed the entities and the store (D1, ADR-003). This gate makes each entity a table and each invariant a constraint where SQL can hold it.
 >
 > **Shelf example.** INV-06 (one pending refund request per order) is a partial unique index: `refund_one_pending`. Two quick taps by Ben make one request; the second insert fails and the tool returns the first request.
 >
-> **What it produces.** The table list, the invariant-to-constraint map, the write rules, the seed and the migration rules. The SQL is in `db/migrations/0001_initial.sql`.
+> **What it produces.** The table list, the invariant-to-constraint map, the write rules, the data rules and the migration rules. The SQL is in `db/migrations/0001_initial.sql`.
 
 ## Tables
 
@@ -80,17 +80,18 @@ States are stored in lower case in tables (`captured`); the glossary and the UI 
 
 ## Seed data
 
-> **What this is.** The data the Try page and the tests start from.
+> **What this is.** The rule for data that is not created by a real seller.
 >
-> **Why it comes here.** Judges need products on the first click. Tests need known rows.
+> **Why it comes here.** The founders decided on 11 Nov 2026: no mock data. A judge must never see an invented store as if it were real.
 >
-> **Shelf example.** Store `maya-mugs` has a "Blue speckled mug" with variants Small ($24.00) and Large ($32.00).
+> **Shelf example.** The Try page shows only stores that real sellers created through the Seller app. If none exist yet, search answers "No products match yet."
 >
-> **What it produces.** The seed rules.
+> **What it produces.** The data rules.
 
-1. `db/seed.sql` creates two demo stores with `is_demo = 1`: `maya-mugs` (ceramics) and `river-prints` (art prints), each with 4 to 6 published products. The founders take the photos, or use photos they have the right to use. No stock photos.
-2. The demo sellers' payee emails are US sandbox business accounts from `deferred-setup.md`.
-3. The seed runs on `local` and `sandbox` only.
+1. No seed runs against `local` for the app, `sandbox` or `production`. There is no `db/seed.sql`.
+2. Invented stores and products for automated tests live in `tests/fixtures/catalog.sql` and are loaded only by `tests/support/d1.ts`.
+3. The first real stores are created by the founders as real sellers: they sign in with PayPal (sandbox business accounts), photograph their own items and confirm prices (task T-23).
+4. `stores.is_demo` stays 0. It is kept only so the migration does not change.
 
 ## Migrations
 

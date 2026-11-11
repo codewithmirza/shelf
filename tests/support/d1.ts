@@ -3,11 +3,11 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 
 // A small D1 stand-in over Node's SQLite, with the real migrations applied. It lets the D1 adapters run
 // their actual SQL in CI. Batches run in one transaction, as D1 does.
-export function sqliteD1(seed = false): D1Database {
+export function sqliteD1(fixture = false): D1Database {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON;");
   for (const f of readdirSync("db/migrations").filter((n) => n.endsWith(".sql")).sort()) db.exec(readFileSync(`db/migrations/${f}`, "utf8"));
-  if (seed) db.exec(readFileSync("db/seed.sql", "utf8"));
+  if (fixture) db.exec(readFileSync("tests/fixtures/catalog.sql", "utf8"));
 
   const isRead = (sql: string) => /^\s*(SELECT|WITH)\b/i.test(sql);
   const make = (sql: string, args: unknown[] = []) => {
