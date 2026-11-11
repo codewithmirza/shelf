@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { searchExamples } from "@/server/catalog";
 import { shelfEnv } from "@/server/http";
 import { CopyButton } from "./copy-button";
 import { TryChat } from "./try-chat";
@@ -8,8 +9,9 @@ export const metadata: Metadata = { title: "Try Shelf · Shop and pay inside a c
 export const dynamic = "force-dynamic";
 
 // The judge path (FL-JDG-01): no account, no install. Sandbox buyer details are shown, because they are test-only.
-export default function TryPage() {
+export default async function TryPage() {
   const env = shelfEnv();
+  const examples = await searchExamples(env.DB).catch(() => []);
   const email = env.TRY_BUYER_EMAIL ?? "";
   const password = env.TRY_BUYER_PASSWORD ?? "";
   return (
@@ -26,7 +28,7 @@ export default function TryPage() {
         <a href="/" className={styles.brand}>Shelf</a>
         <h1 className={styles.h1}>Try it</h1>
       </header>
-      <TryChat />
+      <TryChat examples={examples} />
     </main>
   );
 }

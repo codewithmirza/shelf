@@ -87,3 +87,28 @@ export function d1Catalog(db: D1Database): Catalog {
 }
 
 const optionsSchema = z.record(z.string(), z.string());
+
+// Search examples for the Try page, taken from what sellers really published (AGENTS.md rule 11: no mock data).
+// "Fresh Handmade Motichoor Laddu Box - Traditional Indian Sweets" -> "Fresh Handmade Motichoor Laddu Box".
+export function exampleQuery(title: string): string {
+  const head = title.split(/\s[-–—|:]\s|\(/)[0]?.trim() ?? "";
+  const words = head.split(/\s+/).filter(Boolean);
+  return words.slice(0, 5).join(" ").slice(0, 40).trim();
+}
+
+export async function searchExamples(db: D1Database, limit = 3): Promise<string[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT p.title FROM products p WHERE p.state = 'published'
+       AND EXISTS (SELECT 1 FROM variants v WHERE v.product_id = p.id AND v.price_cents IS NOT NULL)
+       ORDER BY p.updated_at DESC LIMIT 12`,
+    )
+    .all<{ title: string }>();
+  const out: string[] = [];
+  for (const r of results) {
+    const q = exampleQuery(r.title);
+    if (q && !out.includes(q)) out.push(q);
+    if (out.length === limit) break;
+  }
+  return out;
+}

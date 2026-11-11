@@ -16,7 +16,7 @@ Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/), Nov
 | 4 | Ask for a refund from the paid order card. | "Waiting for the seller". No tool, agent or model can approve a refund; only the seller can. |
 | 5 | Open the [Seller app](https://shelf.160422733171.workers.dev/app) and log in with a PayPal sandbox business account. | Name a store, add photos, check drafts, set prices, publish. Orders, tracking and refund decisions live here. |
 
-In your own assistant: add `https://shelf.160422733171.workers.dev/mcp` as a custom connector (Claude) or an app in developer mode (ChatGPT), then ask "find me a mug under $40".
+In your own assistant: add `https://shelf.160422733171.workers.dev/mcp` as a custom connector (Claude) or an app in developer mode (ChatGPT), then ask for something a Shelf seller sells, for example "laddu under $20".
 
 ## Where it works
 

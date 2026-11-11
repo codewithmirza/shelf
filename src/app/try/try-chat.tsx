@@ -13,11 +13,10 @@ type Turn =
 // Omit over each member, so each kind keeps its own fields.
 type NewTurn = Turn extends infer T ? (T extends Turn ? Omit<T, "id"> : never) : never;
 
-const EXAMPLES = ["a blue mug under $40", "prints", "espresso cups"];
-
 // The search-box Try page (ADR-010): a judge types what they want, Shelf answers with the real Storefront.
 // It calls the same MCP endpoint a chat host calls, so everything after the first search is the real product.
-export function TryChat() {
+// Examples come from products sellers published; with none published, no chips show.
+export function TryChat({ examples }: { examples: readonly string[] }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,11 +57,11 @@ export function TryChat() {
         {turns.length === 0 && (
           <li className={styles.hello}>
             <p>Ask for something to buy. Shelf answers with a real store inside the chat, and you pay with the PayPal sandbox.</p>
-            <div className={styles.examples}>
-              {EXAMPLES.map((e) => (
+            {examples.length > 0 && <div className={styles.examples}>
+              {examples.map((e) => (
                 <button key={e} type="button" className={styles.example} onClick={() => search(e)}>{e}</button>
               ))}
-            </div>
+            </div>}
           </li>
         )}
         {turns.map((t) =>
@@ -80,7 +79,7 @@ export function TryChat() {
       <div ref={end} />
       <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); void search(input); }}>
         <label htmlFor="ask" className={styles.srOnly}>What do you want to buy?</label>
-        <input id="ask" value={input} onChange={(e) => setInput(e.target.value)} placeholder="A blue mug under $40" autoComplete="off" maxLength={200} />
+        <input id="ask" value={input} onChange={(e) => setInput(e.target.value)} placeholder={examples[0] ?? "What do you want to buy?"} autoComplete="off" maxLength={200} />
         <button type="submit" disabled={busy || !input.trim()}>{busy ? "Searching…" : "Ask"}</button>
       </form>
     </div>
