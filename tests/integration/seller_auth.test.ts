@@ -11,7 +11,7 @@ const who = { accountId: "PAYERID123", email: "maya@seller.test", name: "Maya" }
 describe("Log in with PayPal (TC-SEL-01)", () => {
   it("the authorize URL asks for the ADR-008 scopes, with state and the return URL", () => {
     const u = new URL(authorizeUrl("https://api-m.sandbox.paypal.com", "CID", "https://s.test/api/auth/paypal/return", "ST"));
-    expect(u.origin).toBe("https://www.sandbox.paypal.com");
+    expect(u.origin + u.pathname).toBe("https://www.sandbox.paypal.com/connect");
     expect(u.searchParams.get("scope")).toBe("openid email https://uri.paypal.com/services/paypalattributes");
     expect([u.searchParams.get("state"), u.searchParams.get("redirect_uri"), u.searchParams.get("response_type")]).toEqual(["ST", "https://s.test/api/auth/paypal/return", "code"]);
   });
