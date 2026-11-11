@@ -19,4 +19,4 @@ jobs:
       - name: Schema matches migrations
         run: bash scripts/check_schema.sh
       - name: Storefront and Worker build
-        run: pnpm build:storefront && pnpm opennextjs-cloudflare build
+        run: pnpm build:worker

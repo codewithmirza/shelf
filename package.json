@@ -12,6 +12,7 @@
     "dev": "next dev",
     "build:storefront": "vite build --config storefront/vite.config.ts && node scripts/embed_storefront.mjs",
     "build": "pnpm build:storefront && next build",
+    "build:worker": "pnpm build:storefront && opennextjs-cloudflare build",
     "preview": "pnpm build:storefront && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "pnpm build:storefront && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "typecheck": "tsc --noEmit",

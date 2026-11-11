@@ -147,3 +147,15 @@ describe("Pay page and capture (T-10)", () => {
     expect(text).not.toContain("address");
   });
 });
+
+describe("PayPal redirect fallback (T-10)", () => {
+  it("captures with PayPal's own order id, and refuses any other id", async () => {
+    const w = testWorld();
+    const cart = await cartWith(w, [{ v: "var_s", q: 1 }]);
+    const link = await checkout(w, cart.id);
+    w.paypal.approve(link.order.paypalOrderId);
+    const { captureFromPayPalReturn } = await import("@/server/checkout");
+    expect(await captureFromPayPalReturn(w.checkout, link.order.id, "PP999")).toMatchObject({ ok: false, error: { code: "not_found" } });
+    expect(await captureFromPayPalReturn(w.checkout, link.order.id, link.order.paypalOrderId)).toEqual({ ok: true, value: "captured" });
+  });
+});

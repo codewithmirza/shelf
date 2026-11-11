@@ -1,0 +1,49 @@
+/* Pay page (DESIGN-SYSTEM.md "Pay page", "The Paid moment"). Values come from tokens.css only. */
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.store { font-size: var(--text-13); color: var(--color-ink-secondary); letter-spacing: var(--tracking-label); margin: 0; }
+.lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-line); }
+.line {
+  display: flex; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) 0; border-bottom: 1px solid var(--color-line);
+  font-size: var(--text-15); line-height: var(--leading-body);
+}
+.options, .muted { color: var(--color-ink-tertiary); }
+.muted { font-size: var(--text-13); margin: 0; }
+.price, .totalPrice, .paidAmount { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+.total { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--text-15); }
+.totalPrice { font-size: var(--text-24); letter-spacing: var(--tracking-display); }
+.actions { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
+.payButton {
+  height: 48px; border: 0; border-radius: var(--radius-control);
+  background: #FFC439; color: #111110; /* PayPal's own button colours */
+  font: var(--weight-semibold) var(--text-17) / 1 var(--font-sans);
+  cursor: pointer;
+  transition: transform var(--duration-press) var(--ease-out), opacity var(--duration-hover) var(--ease-out);
+}
+.payButton:active:not(:disabled) { transform: scale(0.98); }
+.payButton:disabled { opacity: 0.6; cursor: default; }
+.payButton:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.notice {
+  margin: 0; padding: var(--space-3); border-radius: var(--radius-control);
+  background: var(--color-wait-surface); color: var(--color-wait); font-size: var(--text-15);
+}
+.paid { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); color: var(--color-paid); }
+.paidWord, .paidAmount { margin: 0; opacity: 0; animation: rise 300ms var(--ease-out) forwards; }
+.paidWord { font-size: var(--text-24); font-weight: var(--weight-semibold); animation-delay: 380ms; }
+.paidAmount { color: var(--color-ink); font-size: var(--text-20); animation-delay: 420ms; }
+.check path { stroke-dasharray: 26; stroke-dashoffset: 26; animation: draw 420ms var(--ease-out) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .check path { stroke-dashoffset: 0; animation: none; }
+  .paidWord, .paidAmount { opacity: 1; animation: none; }
+}

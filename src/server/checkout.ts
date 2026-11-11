@@ -167,12 +167,23 @@ export async function payPage(deps: CheckoutDeps, rawOrderId: string, token: str
   return ok({ order: order.value, cart: cart.value.cart, store: cart.value.store });
 }
 
-// POST /api/pay/{order}/capture. Calling it twice captures once: a final order answers at once, and the
-// PayPal call carries capture:{order} as its request ID (INV-04, AC-BUY-03-03).
+// POST /api/pay/{order}/capture, with the signed Pay page link.
 export async function capturePayment(deps: CheckoutDeps, rawOrderId: string, token: string): Promise<Result<OrderState, DomainError>> {
   const found = await orderFromPayToken(deps, rawOrderId, token);
-  if (!found.ok) return found;
-  const order = found.value;
+  return found.ok ? captureOrderOnce(deps, found.value) : found;
+}
+
+// GET /pay/{order}/done: PayPal's redirect fallback returns here without our link, but with its own order id
+// in `token`. Only the buyer who approved that PayPal order has it, and capture is what they approved.
+export async function captureFromPayPalReturn(deps: CheckoutDeps, rawOrderId: string, paypalToken: string): Promise<Result<OrderState, DomainError>> {
+  const order = await deps.orders.byId(asOrderId(rawOrderId));
+  if (!order || order.paypalOrderId !== paypalToken) return err(domainError("not_found", "return token"));
+  return captureOrderOnce(deps, order);
+}
+
+// Calling it twice captures once: a final order answers at once, and the PayPal call carries
+// capture:{order} as its request ID (INV-04, AC-BUY-03-03).
+async function captureOrderOnce(deps: CheckoutDeps, order: OrderRow): Promise<Result<OrderState, DomainError>> {
   switch (order.state) {
     case "captured":
     case "shipped":

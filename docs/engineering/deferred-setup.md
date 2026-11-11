@@ -18,6 +18,7 @@
 | S-06 | On the sandbox app: turn on Log in with PayPal with the return URL `{PUBLIC_ORIGIN}/api/auth/paypal/return` and the email scope. | Mirza | T-07 | SPK-06 passes. |
 | S-07 | On the sandbox app: add a webhook to `{PUBLIC_ORIGIN}/api/webhooks/paypal` for the 5 events in Gate 5. Record the webhook ID. | Mirza | T-11 | The webhook simulator reaches the route. |
 | S-08 | Claude: add `{PUBLIC_ORIGIN}/mcp` as a custom connector. ChatGPT: turn on developer mode and add the same URL. | Mirza | T-05, video | The tools list shows in both. |
+| S-10 | Set `TOKEN_SECRET` on the Worker: 32 or more random characters (`openssl rand -base64 48`). | Mirza | T-10 | The Pay page opens from a start_checkout link. |
 | S-09 | Generate VAPID keys for Web Push. | Agent may generate; Mirza stores them | T-20 | Keys set as secrets. |
 
 ## The principle to remember
