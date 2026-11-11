@@ -18,12 +18,13 @@
 
 | Task | Title | State | Evidence |
 | --- | --- | --- | --- |
+| 11 Nov 12:05 | Claude | T-03: PayPal client in `src/server/paypal/` (http, orders, refunds, webhooks) with 11 unit tests |
 | T-01 | Scaffold the repository and the one-Worker entry | Done (deploy waits for S-02) | `evidence/SPK-01.md` |
 | T-02 | D1 migration, Drizzle schema, seed loader | Done (remote apply waits for S-02) | `pnpm db:check`: schema match, 14 tables; seed applied to local D1 |
-| T-04 | Vertex client and extraction schema | Ready | — |
+| T-04 | Vertex client and extraction schema | Next | — |
 | T-05 | MCP server and Storefront resource | Ready | — |
 | T-08 | Domain rules | Done | `pnpm test`: 22 tests; every move of the 4 machines checked; TC-PAY-02, TC-PAY-06, TC-CART-04 |
-| T-03 | PayPal REST client (code and unit tests; live sandbox waits for S-04) | Next | — |
+| T-03 | PayPal REST client (code and unit tests; live sandbox waits for S-04) | Done (unit) | `pnpm check`: 33 tests; same PayPal-Request-Id on retry, no 4xx retry, timeout mapped, shapes parsed. Live TC-PAY-01 waits for S-04 |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
