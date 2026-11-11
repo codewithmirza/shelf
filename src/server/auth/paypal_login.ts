@@ -72,7 +72,11 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
       signal: AbortSignal.timeout(10_000),
     }).catch(() => null);
     // PayPal's error name (for example invalid_token or INSUFFICIENT_SCOPE) is not personal data; keep it for the log.
-    const errName = res && !res.ok ? await res.clone().json().then((b: unknown) => { const e = b as { error?: string; name?: string } | null; return e?.error ?? e?.name ?? ""; }, () => "") : "";
+    // PayPal's error name and description (for example "invalid_request: …") hold no personal data.
+    const errName = res && !res.ok ? await res.clone().json().then((b: unknown) => {
+      const e = b as { error?: string; name?: string; error_description?: string; message?: string } | null;
+      return [e?.error ?? e?.name, e?.error_description ?? e?.message].filter(Boolean).join(": ").slice(0, 90);
+    }, () => "") : "";
     statuses.push(`${res?.status ?? "network"}${errName ? `:${errName}` : ""}`);
     if (res?.ok) {
       const who = identityFrom(await res.json().catch(() => null));
@@ -87,7 +91,9 @@ export async function identityFromCode(deps: PayPalDeps, code: string, redirectU
     if (who.ok) return who;
   }
   // Which scopes PayPal granted says whether the app's Log in with PayPal settings allow openid and email.
-  const granted = (token.data.scope ?? "").split(/\s+/).filter(Boolean).map((x) => x.replace("https://uri.paypal.com/services/", "")).join("+") || "none";
+  const scopes = (token.data.scope ?? "").split(/\s+/).filter(Boolean);
+  const has = (x: string) => (scopes.some((sc) => sc === x || sc.endsWith(`/${x}`)) ? "y" : "n");
+  const granted = `openid:${has("openid")},email:${has("email")},attrs:${has("paypalattributes")},n=${scopes.length}`;
   return err({ ...domainError("paypal.unavailable", `userinfo ${statuses.join(",")} ${token.data.id_token ? "idtoken-unusable" : "no-idtoken"} scopes=${granted}`), step: "userinfo" });
 }
 

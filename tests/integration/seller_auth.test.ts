@@ -60,7 +60,7 @@ describe("Log in with PayPal (TC-SEL-01)", () => {
       baseUrl: "https://api-m.sandbox.paypal.com", clientId: "CID", clientSecret: "SEC", sleep: async () => {},
       fetch: async (input) => (String(input).endsWith("/v1/oauth2/token") ? Response.json({ access_token: "AT" }) : new Response("", { status: 403 })),
     };
-    expect(await identityFromCode(deps, "C", "https://s.test/r")).toMatchObject({ ok: false, error: { step: "userinfo", detail: "userinfo 403,403 no-idtoken scopes=none" } });
+    expect(await identityFromCode(deps, "C", "https://s.test/r")).toMatchObject({ ok: false, error: { step: "userinfo", detail: "userinfo 403,403 no-idtoken scopes=openid:n,email:n,attrs:n,n=0" } });
   });
 
   it("AC-SEL-01-01/02: sign-in stores the payee and a 7-day session; signing in again keeps one seller", async () => {
