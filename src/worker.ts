@@ -4,7 +4,9 @@ import { createMcpHandler } from "agents/mcp/server";
 import openNext from "../.open-next/worker.js";
 import type { ExtractionMessage, ShelfEnv } from "./env";
 import { createShelfServer } from "./server/mcp/server";
-import { checkoutDeps, mcpDeps } from "./server/runtime";
+import { checkoutDeps, mcpDeps, photoDeps } from "./server/runtime";
+import { extractPhoto } from "./server/seller/photos";
+import { depsFromEnv as vertexDeps, extractProduct } from "./server/model/vertex";
 import { reconcile } from "./server/reconcile";
 import { LIMITS, checkCaller, checkRate, clientAddress, d1RateStore, sweepRateLimits, tooMany } from "./server/ratelimit";
 
@@ -35,9 +37,20 @@ export default {
     return (openNext as ExportedHandler<ShelfEnv>).fetch!(request as never, env, ctx);
   },
 
-  // Reads each queued photo and drafts a product (task T-16).
-  async queue(batch: MessageBatch<ExtractionMessage>, _env: ShelfEnv, _ctx: ExecutionContext): Promise<void> {
-    for (const message of batch.messages) message.retry();
+  // Each photo becomes a Draft (FL-SEL-02). Three tries in all (wrangler.jsonc max_retries), then Failed.
+  async queue(batch: MessageBatch<ExtractionMessage>, env: ShelfEnv, _ctx: ExecutionContext): Promise<void> {
+    const deps = photoDeps(env);
+    const read = (photo: Parameters<typeof extractProduct>[1]) => extractProduct(vertexDeps(env), photo);
+    for (const message of batch.messages) {
+      try {
+        const step = await extractPhoto(deps, read, message.body.photoId, message.attempts, 4);
+        if (step.kind === "retry") message.retry({ delaySeconds: 10 * message.attempts });
+        else message.ack();
+      } catch (e) {
+        console.log(JSON.stringify({ level: "error", job: "extract", photo: message.body.photoId, error: String(e).slice(0, 200) }));
+        message.retry({ delaySeconds: 15 });
+      }
+    }
   },
 
   // Every 5 minutes: agree with PayPal on open orders, cancel unpaid ones, expire old carts (SYS-PAY-09).

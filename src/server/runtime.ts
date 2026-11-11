@@ -5,7 +5,8 @@ import { d1OrderRepo, type CheckoutDeps } from "./checkout";
 import { webIdSource } from "./domain/ids";
 import type { ShelfMcpDeps } from "./mcp/server";
 import { depsFromEnv as paypalDeps } from "./paypal/http";
-import { captureOrder, createOrder, getOrder } from "./paypal/orders";
+import { addTracking, captureOrder, createOrder, getOrder } from "./paypal/orders";
+import { refundCapture } from "./paypal/refunds";
 import { VERSION } from "../version";
 import { domainError } from "./domain/errors";
 import { err, ok } from "./domain/result";
@@ -50,4 +51,20 @@ export function webhookDeps(env: ShelfEnv): WebhookDeps {
       return r.error.code === "request.invalid" || r.error.code === "paypal.refused" ? err(domainError("request.invalid", r.error.detail)) : err(r.error);
     },
   };
+}
+
+export function sellerOrderDeps(env: ShelfEnv): import("./refunds").SellerOrderDeps {
+  const pp = paypalDeps(env);
+  return {
+    db: env.DB,
+    ids: webIdSource,
+    paypal: {
+      addTracking: (i) => addTracking(pp, { ...i, paypalOrderId: i.paypalOrderId as never, captureId: i.captureId as never }),
+      refund: (capture, amount, key) => refundCapture(pp, capture as never, amount, key),
+    },
+  };
+}
+
+export function photoDeps(env: ShelfEnv): import("./seller/photos").PhotoDeps {
+  return { db: env.DB, bucket: env.PHOTOS, ids: webIdSource, queue: { send: async (body) => { await env.EXTRACTION_QUEUE.send(body); } } };
 }

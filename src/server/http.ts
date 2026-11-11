@@ -13,3 +13,22 @@ export function errorResponse(e: DomainError): Response {
 }
 
 export const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "no-store" } });
+
+// The signed-in seller, or null. Every Seller app route starts here (SYS-SEL-02).
+export async function currentSeller(request: Request, env: ShelfEnv) {
+  const { d1SessionRepo, readCookie, SESSION_COOKIE } = await import("./auth/session");
+  const id = readCookie(request, SESSION_COOKIE);
+  return id ? d1SessionRepo(env.DB).sellerForSession(id, new Date().toISOString()) : null;
+}
+
+// Every Seller app route: the seller from the session and their store. Missing either answers like the
+// contract says: 401 with no session, 404 with no store (SYS-SEL-02).
+export async function sellerContext(request: Request): Promise<{ ok: true; env: ShelfEnv; sellerId: string; storeId: import("./domain/brand").StoreId } | { ok: false; response: Response }> {
+  const env = shelfEnv();
+  const seller = await currentSeller(request, env);
+  if (!seller) return { ok: false, response: errorResponse({ code: "auth.required" }) };
+  if (!seller.storeId) return { ok: false, response: errorResponse({ code: "not_found", detail: "no store yet" }) };
+  return { ok: true, env, sellerId: seller.id, storeId: seller.storeId };
+}
+
+export const nowIso = () => new Date().toISOString();
