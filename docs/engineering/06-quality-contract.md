@@ -64,6 +64,7 @@ Kinds: Unit (pure domain code), Integration (Worker runtime with local D1 via `@
 | TC-WA-03 | ADR-012 | Unit | The agent runs the tool Gemini calls, returns Gemini's turn verbatim (thought signatures), and sends Shelf's own messages before the reply. |
 | TC-WA-04 | ADR-012, THR-06 | Unit | WhatsApp checkout sends the exact Pay link itself; the model never sees the order token or the link. |
 | TC-WA-05 | ADR-012, THR-08 | Unit | WhatsApp order status reads the token Shelf stored; no tool takes a token from the model. |
+| TC-DESK-01 | ADR-013, INV-03 | Unit | The Seller desk shows one row per option; an unpriced option stays unpriced; Gemini's range shows only while it is a suggestion. |
 | TC-CART-01 | SYS-CART-01, SYS-CART-04 | Contract | The agent script creates, replaces, reads and checks out a cart against a sandbox approval. |
 | TC-CART-02 | SYS-CART-02 | Integration | PUT replaces; old lines are gone. |
 | TC-CART-03 | SYS-CART-03 | Integration | Out of stock gives 200 with an issue; unknown cart 404; bad body 400; not approved 422. |

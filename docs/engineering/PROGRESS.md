@@ -40,6 +40,7 @@
 | T-25 | Try page | In progress | Theme switch; examples from published products |
 | T-26 | Live sandbox run and review | In progress | Money-path review done: fixed webhook verification (original body) and MCP limit. Live payment, sign-in round trip, webhook delivery and Claude rendering wait for a real seller store (founder) and S-03 |
 | T-29 | WhatsApp agent for buyers and sellers | In progress | ADR-012; TC-WA-01 to 05; webhook, queue, buyer and seller tools |
+| T-30 | Seller desk on AG Grid | Done | ADR-013; TC-DESK-01; /desk |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -59,6 +60,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 12 Nov 20:45 | Claude | Seller desk at /desk: AG Grid Community 36.2.0, product options with in-place price and stock edits through the existing PATCH, publish from a row, orders grid; themed with Shelf tokens. README: live sandbox payment recorded as verified. |
 | 12 Nov 18:05 | Claude | WhatsApp channel built (ADR-012): signed webhook, queue-run Gemini agent over the same MCP tools, Pay link and Paid message, seller photo-to-draft and pricing in chat, Connect WhatsApp on the Store screen. Waiting for Meta credentials to verify live. |
 | 11 Nov 15:14 | Claude | Theme switch (Auto, Light, Dark) on the landing page, Try page and the Store screen; the choice applies before paint and reaches the Storefront through hostContext. |
 | 11 Nov 13:54 | Claude | Try page search verified live: 'laddu' returns the two published Alcooz products in the Storefront. Example chips now come from published product titles, not hard-coded mug examples. |

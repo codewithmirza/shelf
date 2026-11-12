@@ -88,6 +88,10 @@ export function StoreScreen() {
           <div><Button type="submit" kind="secondary" busy={busy === "save"}>Save</Button></div>
         </form>
         <section className={styles.section}>
+          <h2 className={styles.label}>On a laptop</h2>
+          <p className={styles.help}>The <a href="/desk">Seller desk</a> shows every product option and order in one grid, with prices you can edit in place.</p>
+        </section>
+        <section className={styles.section}>
           <h2 className={styles.label}>WhatsApp</h2>
           <p className={styles.help}>Send product photos and set prices from WhatsApp. Shelf also messages you when an order is paid.</p>
           {wa?.linked && <p className={styles.body}>Linked to {wa.linked}.</p>}

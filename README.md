@@ -24,6 +24,7 @@ In your own assistant: add `https://shelf.160422733171.workers.dev/mcp` as a cus
 | --- | --- |
 | The Storefront app (cards, cart, checkout, Paid) | Assistants that support MCP Apps, such as Claude and ChatGPT. |
 | The Shelf tools: `search_products`, `show_product`, `update_cart`, `start_checkout`, `get_order_status`, `request_refund` | Any assistant that connects to a remote MCP server. Each tool also answers in plain text. |
+| WhatsApp | Buyers search, pick and get a PayPal Pay link; sellers send photos, set prices and publish (ADR-012). |
 | The Cart API (`/api/stores/{slug}/merchant-cart`) | Any agent that can make HTTP calls, with a store key from the Seller app. Shapes follow PayPal's Cart API v1 contract. |
 
 ## How it works
@@ -71,10 +72,11 @@ What has been proven, and how. Updated as each live check runs.
 | PayPal sandbox credentials on the Worker | Verified live | `/api/health` gets an OAuth token |
 | Log in with PayPal redirect | Verified live | `/api/auth/paypal/start` redirects with the scopes and a `state` cookie |
 | An unsigned webhook changes nothing | Verified live | 400 before any PayPal call |
-| A full sandbox payment, approval to Paid | **Not yet verified live** | Covered by tests against a PayPal fake; live run pending |
+| A full sandbox payment, approval to Paid | Verified live | 11 Nov: a sandbox buyer paid $19.00 (laddu, 12-pack, plus $5 shipping) to the Alcooz store; the order reads Captured |
 | Log in with PayPal round trip | Verified live | A sandbox business seller signed in; Shelf stored its payer ID. The app's own owner account cannot sign in as a seller, by design |
 | PayPal webhook delivery | **Not yet verified live** | Webhook ID is set; waiting for the first real event |
 | Photo to draft with Gemini | Verified live | Four real product photos became drafts through Gemini 3.8 Flash on Vertex AI; the seller set every price |
+| WhatsApp agent (buyers and sellers) | **Being verified live** | Webhook verified by Meta; signature and verify-token checks answer 401 and 403 live |
 | Rendering inside Claude and ChatGPT | **Not yet verified** | Needs the connector added in each assistant |
 | Cart API with a live key | **Not yet verified live** | `scripts/cart_agent.mjs` is ready |
 
