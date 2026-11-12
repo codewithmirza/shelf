@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         <h2>AI</h2>
         <p>Product photos and chat messages are processed by Gemini on Google Cloud Vertex AI. Shelf does not use them to train any model.</p>
         <h2>Deletion</h2>
-        <p>To have your data deleted, email <a href="mailto:mirza@gitring.tech">mirza@gitring.tech</a> from the address on your account, or send "delete my data" to Shelf on WhatsApp and we will remove it within 30 days. Orders may be kept as long as PayPal&apos;s records require.</p>
+        <p>To have your data deleted, email <a href="mailto:mirza@gitring.tech">mirza@gitring.tech</a> from the address on your account, and we will remove it within 30 days. Orders may be kept as long as PayPal&apos;s records require.</p>
         <p className={styles.lede}>Last updated 12 November 2026.</p>
       </main>
     </div>
