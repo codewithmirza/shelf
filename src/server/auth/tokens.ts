@@ -1,10 +1,11 @@
 // Signed tokens for the Pay page link and for reading one order (NFR-SEC-02, THR-06, THR-08).
 // Format: v1.<base64url payload>.<base64url HMAC-SHA256>. The kind is signed, so an order token never opens a Pay page.
 
-export type TokenKind = "pay" | "order";
+export type TokenKind = "pay" | "order" | "wa_link";
 
 // A Pay page link lives 30 minutes (NFR-SEC-02). An order token lets the buyer follow the order, so it lives 90 days.
-export const TOKEN_TTL_S: Record<TokenKind, number> = { pay: 30 * 60, order: 90 * 24 * 60 * 60 };
+// A WhatsApp link code binds one seller to the number that sends it, within 15 minutes (ADR-012). Its subject is the seller id.
+export const TOKEN_TTL_S: Record<TokenKind, number> = { pay: 30 * 60, order: 90 * 24 * 60 * 60, wa_link: 15 * 60 };
 
 interface Payload {
   readonly k: TokenKind;

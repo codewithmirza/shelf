@@ -18,7 +18,9 @@ export function StoreScreen() {
   const [keys, setKeys] = useState<StoreKeyRow[]>([]);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [label, setLabel] = useState("");
-  const [busy, setBusy] = useState<null | "save" | "key">(null);
+  const [busy, setBusy] = useState<null | "save" | "key" | "wa">(null);
+  const [wa, setWa] = useState<{ available: boolean; linked: string | null } | null>(null);
+  const [waLink, setWaLink] = useState<{ text: string; url: string | null; number: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,11 +32,20 @@ export function StoreScreen() {
       setShipping((r.data.store.shippingCents / 100).toFixed(2));
     });
     void api<{ store_keys: StoreKeyRow[] }>("/store-keys").then((r) => r.ok && setKeys(r.data.store_keys));
+    void api<{ available: boolean; linked: string | null }>("/whatsapp").then((r) => r.ok && setWa(r.data));
   }, []);
 
   if (!store) return <><main className={styles.page}><Header title="Store" />{error ? <Notice>{error}</Notice> : <p className={styles.help}>Loading…</p>}</main><BottomBar /></>;
   const link = `${location.origin}/s/${store.slug}`;
 
+  async function linkWhatsApp() {
+    setBusy("wa");
+    const r = await api<{ text: string; url: string | null; number: string | null }>("/whatsapp", { method: "POST" });
+    setBusy(null);
+    if (!r.ok) return setError(r.message);
+    setWaLink(r.data);
+    if (r.data.url) window.open(r.data.url, "_blank", "noopener,noreferrer");
+  }
   async function save() {
     setBusy("save");
     const r = await api<{ store: StoreRecord }>("/store", { method: "PATCH", body: { name: store!.name, refund_policy: policy || undefined, shipping: Number(shipping) || 0 } });
@@ -76,6 +87,20 @@ export function StoreScreen() {
           </Field>
           <div><Button type="submit" kind="secondary" busy={busy === "save"}>Save</Button></div>
         </form>
+        <section className={styles.section}>
+          <h2 className={styles.label}>WhatsApp</h2>
+          <p className={styles.help}>Send product photos and set prices from WhatsApp. Shelf also messages you when an order is paid.</p>
+          {wa?.linked && <p className={styles.body}>Linked to {wa.linked}.</p>}
+          {wa && !wa.available && <p className={styles.meta}>WhatsApp isn&apos;t set up on this Shelf yet.</p>}
+          {waLink && (
+            <div className={styles.keyBox} role="status">
+              <p className={styles.strongSmall}>{waLink.url ? "WhatsApp opened with this message. Send it." : `Send this message to Shelf on WhatsApp${waLink.number ? ` (+${waLink.number})` : ""}.`} It works for 15 minutes.</p>
+              <code className={styles.keyText}>{waLink.text}</code>
+              <Button kind="secondary" onClick={() => navigator.clipboard.writeText(waLink.text).then(() => toast("Copied."))}>Copy message</Button>
+            </div>
+          )}
+          {wa?.available && <div><Button kind="secondary" busy={busy === "wa"} onClick={() => void linkWhatsApp()}>{wa.linked ? "Link another number" : "Connect WhatsApp"}</Button></div>}
+        </section>
         <section className={styles.section}>
           <h2 className={styles.label}>Agent keys (Cart API)</h2>
           <p className={styles.help}>Other AI agents use a key to build carts in your store. You approve every refund yourself.</p>

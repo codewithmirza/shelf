@@ -39,6 +39,7 @@
 | T-24 | Landing page and public store page | Done | Landing (L1, L2) with 'inside AI assistants' and an honest Where it works section; /s/{slug} lists published products; Geist self-hosted; real brand mark |
 | T-25 | Try page | In progress | Theme switch; examples from published products |
 | T-26 | Live sandbox run and review | In progress | Money-path review done: fixed webhook verification (original body) and MCP limit. Live payment, sign-in round trip, webhook delivery and Claude rendering wait for a real seller store (founder) and S-03 |
+| T-29 | WhatsApp agent for buyers and sellers | In progress | ADR-012; TC-WA-01 to 05; webhook, queue, buyer and seller tools |
 
 Tasks not listed are not started. States: Next, In progress, Done, Blocked (with the blocker ID).
 
@@ -58,6 +59,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 12 Nov 18:05 | Claude | WhatsApp channel built (ADR-012): signed webhook, queue-run Gemini agent over the same MCP tools, Pay link and Paid message, seller photo-to-draft and pricing in chat, Connect WhatsApp on the Store screen. Waiting for Meta credentials to verify live. |
 | 11 Nov 15:14 | Claude | Theme switch (Auto, Light, Dark) on the landing page, Try page and the Store screen; the choice applies before paint and reaches the Storefront through hostContext. |
 | 11 Nov 13:54 | Claude | Try page search verified live: 'laddu' returns the two published Alcooz products in the Storefront. Example chips now come from published product titles, not hard-coded mug examples. |
 | 11 Nov 13:52 | Claude | First real store live (sandbox business seller). 4 real photos drafted by Gemini on Vertex; seller set prices and published 2. |

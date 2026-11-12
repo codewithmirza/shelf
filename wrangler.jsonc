@@ -14,7 +14,7 @@
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "shelf-photos" }],
   "queues": {
     "producers": [{ "binding": "EXTRACTION_QUEUE", "queue": "extraction" }],
-    "consumers": [{ "queue": "extraction", "max_retries": 3, "dead_letter_queue": "extraction-failed", "max_batch_size": 5 }]
+    "consumers": [{ "queue": "extraction", "max_retries": 3, "dead_letter_queue": "extraction-failed", "max_batch_size": 5, "max_batch_timeout": 1 }]
   },
   "triggers": { "crons": ["*/5 * * * *"] },
   "vars": {

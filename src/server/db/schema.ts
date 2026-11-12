@@ -174,3 +174,36 @@ export const rateLimits = sqliteTable("rate_limits", {
   count: integer("count").notNull(),
   expiresAt: text("expires_at").notNull(),
 });
+
+// TAB-15 to TAB-19: the WhatsApp channel (ADR-012).
+export const waChats = sqliteTable("wa_chats", {
+  waId: text("wa_id").primaryKey().notNull(),
+  historyJson: text("history_json").notNull().default("[]"),
+  cartId: text("cart_id"),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const waSeen = sqliteTable("wa_seen", {
+  messageId: text("message_id").primaryKey().notNull(),
+  seenAt: text("seen_at").notNull(),
+});
+
+export const waSellers = sqliteTable("wa_sellers", {
+  waId: text("wa_id").primaryKey().notNull(),
+  sellerId: text("seller_id").notNull().unique().references(() => sellers.id, { onDelete: "cascade" }),
+  linkedAt: text("linked_at").notNull(),
+});
+
+export const waOrders = sqliteTable("wa_orders", {
+  orderId: text("order_id").primaryKey().notNull().references(() => orders.id),
+  waId: text("wa_id").notNull(),
+  orderToken: text("order_token").notNull(),
+  notifiedAt: text("notified_at"),
+  createdAt: text("created_at").notNull(),
+}, (t) => [index("wa_orders_wa").on(t.waId)]);
+
+export const waPhotos = sqliteTable("wa_photos", {
+  photoId: text("photo_id").primaryKey().notNull().references(() => photos.id),
+  waId: text("wa_id").notNull(),
+  notifiedAt: text("notified_at"),
+});
