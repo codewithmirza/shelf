@@ -2,7 +2,7 @@
 
 **Shop and pay with PayPal inside AI assistants.**
 
-Shelf is the PayPal checkout that lives inside the chat. A buyer asks an AI assistant for something, finds a small seller's product in an interactive Storefront that renders in the conversation, picks a variant and pays with PayPal. A seller gets on Shelf by sending phone photos: Gemini drafts each product, and the seller sets every price.
+Shelf is the PayPal checkout that lives inside the chat. A buyer asks an AI assistant for something, finds a small seller's product in an interactive Storefront that renders in the conversation, picks a variant and pays with PayPal. A seller gets on Shelf by sending phone photos: Shelf Agent (Gemini 3.8 Flash on Vertex AI) drafts each product, and the seller sets every price.
 
 Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/), November 2026. Everything runs on the PayPal **sandbox**: no real money moves.
 
@@ -12,9 +12,10 @@ Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/), Nov
 | --- | --- | --- |
 | 1 | Open the [Try page](https://shelf.160422733171.workers.dev/try) and ask for something, or tap an example. | The real Storefront in a chat-style page, with products from stores real sellers published. |
 | 2 | Tap a product, pick an option, **Add to cart**, change the quantity. | The server reprices the cart on every change; the total and shipping come from stored prices only. |
-| 3 | Tap **Pay with PayPal**. Approve in the PayPal sandbox with the buyer login shown at the top of the Try page. | The card says "Waiting for PayPal", then turns to **Paid** on its own (it polls `get_order_status`). |
+| 3 | Tap **Pay with PayPal**. Approve in the PayPal sandbox with the buyer login shown at the top of the Try page, or the one in the Devpost testing instructions. | The card says "Waiting for PayPal", then turns to **Paid** on its own (it polls `get_order_status`). |
 | 4 | Ask for a refund from the paid order card. | "Waiting for the seller". No tool, agent or model can approve a refund; only the seller can. |
 | 5 | Open the [Seller app](https://shelf.160422733171.workers.dev/app) and log in with a PayPal sandbox business account. | Name a store, add photos, check drafts, set prices, publish. Orders, tracking and refund decisions live here. |
+| 6 | On a laptop, open the [Seller desk](https://shelf.160422733171.workers.dev/desk). | Every product option and every paid order in two AG Grid grids; price and stock edit in place. |
 
 In your own assistant: add `https://shelf.160422733171.workers.dev/mcp` as a custom connector (Claude) or an app in developer mode (ChatGPT), then ask for something a Shelf seller sells, for example "laddu under $20".
 
@@ -26,6 +27,25 @@ In your own assistant: add `https://shelf.160422733171.workers.dev/mcp` as a cus
 | The Shelf tools: `search_products`, `show_product`, `update_cart`, `start_checkout`, `get_order_status`, `request_refund` | Any assistant that connects to a remote MCP server. Each tool also answers in plain text. |
 | WhatsApp | Buyers search, pick and get a PayPal Pay link; sellers send photos, set prices and publish (ADR-012). |
 | The Cart API (`/api/stores/{slug}/merchant-cart`) | Any agent that can make HTTP calls, with a store key from the Seller app. Shapes follow PayPal's Cart API v1 contract. |
+| The Seller desk (`/desk`) | A laptop browser: product options and orders in AG Grid (ADR-013). |
+
+## How PayPal and AI are used
+
+| Tool | What it does in Shelf |
+| --- | --- |
+| PayPal Orders v2 | Creates one order per checkout from server-priced carts, with the seller as payee, and captures it after approval. |
+| PayPal Payments v2 | Captures and refunds. A refund runs only after the seller approves it, never above the captured amount. |
+| PayPal JavaScript SDK v6 | The Pay page where the buyer approves. The Storefront opens it with `ui/open-link`. |
+| PayPal Webhooks | Signature-checked with verify-webhook-signature, then treated as a hint: Shelf reads the order from PayPal and applies that. |
+| Log in with PayPal | Sellers sign in with the PayPal account that receives their sales. |
+| `PayPal-Request-Id` | Every write carries a key built from Shelf's records, so a retry acts once. |
+| PayPal Cart API v1 contract | The `merchant-cart` routes for other agents. |
+| Shelf Agent: Gemini 3.8 Flash on Vertex AI, through Cloudflare AI Gateway | Reads product photos and drafts title, description, options and a suggested price range; runs the WhatsApp agent with function calling over the same MCP tools. It never sets a price, approves a refund or holds a token. |
+| Model Context Protocol and MCP Apps | Six tools and the interactive Storefront that renders in the conversation. |
+
+## Sponsor tools
+
+- **AG Grid** (Community 36.2.0, `AllCommunityModule`, React wrapper): the Seller desk at `/desk` shows every product option and every paid order in two grids. Price and stock edit in place through the same server API as the Seller app, so the server checks every change (INV-03). The grid takes Shelf's design tokens through `themeQuartz.withParams`, so it follows the theme switch and dark mode. The quick filter searches products and orders at once. See [ADR-013](docs/engineering/adr/013-seller-desk.md).
 
 ## How it works
 
@@ -72,12 +92,12 @@ What has been proven, and how. Updated as each live check runs.
 | PayPal sandbox credentials on the Worker | Verified live | `/api/health` gets an OAuth token |
 | Log in with PayPal redirect | Verified live | `/api/auth/paypal/start` redirects with the scopes and a `state` cookie |
 | An unsigned webhook changes nothing | Verified live | 400 before any PayPal call |
-| A full sandbox payment, approval to Paid | Verified live | 11 Nov: a sandbox buyer paid $19.00 (laddu, 12-pack, plus $5 shipping) to the Alcooz store; the order reads Captured |
+| A full sandbox payment, approval to Paid | Verified live | 11 Nov: a sandbox buyer paid $19.00 (laddu, 12-pack, plus $5 shipping) to the Alcooz store; the order reads Captured. 12 Nov: three more payments of $23.00 from the Try page, recorded in the demo video |
+| A buyer's refund request reaches the seller | Verified live | 12 Nov: requested from the Paid card; the order shows Refund requested, Waiting for the seller |
 | Log in with PayPal round trip | Verified live | A sandbox business seller signed in; Shelf stored its payer ID. The app's own owner account cannot sign in as a seller, by design |
 | PayPal webhook delivery | **Not yet verified live** | Webhook ID is set; waiting for the first real event |
 | Photo to draft with Gemini | Verified live | Four real product photos became drafts through Gemini 3.8 Flash on Vertex AI; the seller set every price |
 | WhatsApp agent (buyers and sellers) | **Being verified live** | Webhook verified by Meta; signature and verify-token checks answer 401 and 403 live |
-| Rendering inside Claude and ChatGPT | **Not yet verified** | Needs the connector added in each assistant |
 | Cart API with a live key | **Not yet verified live** | `scripts/cart_agent.mjs` is ready |
 
 ## Known limits

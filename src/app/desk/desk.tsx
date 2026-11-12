@@ -104,7 +104,7 @@ export function Desk() {
       cellStyle: (p) => (p.value === null ? { color: "var(--color-wait)" } : null),
     },
     { field: "stock", headerName: "Stock", width: 100, editable: true, type: "rightAligned", valueParser: (p) => { const n = Number(p.newValue); return Number.isInteger(n) && n >= 0 && n <= 9999 ? n : p.oldValue; } },
-    { field: "suggested", headerName: "Gemini suggests", width: 170, cellRenderer: (p: ICellRendererParams<VariantRow>) => (p.value ? <span className={styles.suggested}>{p.value}</span> : null) },
+    { field: "suggested", headerName: "Shelf Agent suggests", width: 190, cellRenderer: (p: ICellRendererParams<VariantRow>) => (p.value ? <span className={styles.suggested}>{p.value}</span> : null) },
     { field: "state", headerName: "State", width: 120, cellRenderer: (p: ICellRendererParams<VariantRow>) => (p.data?.first ? <Badge value={p.value} /> : null) },
     {
       headerName: "", colId: "action", width: 130, sortable: false, filter: false,

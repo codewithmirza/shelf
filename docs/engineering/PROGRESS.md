@@ -60,6 +60,7 @@ Code is written and tested locally while these are open. Live checks run when th
 
 | When (IST) | Who | What |
 | --- | --- | --- |
+| 12 Nov 22:30 | Claude | README: how PayPal and AI are used, AG Grid as the sponsor tool, the Seller desk, the 12 Nov live payments and refund request. Desk column renamed "Shelf Agent suggests". |
 | 12 Nov 20:45 | Claude | Seller desk at /desk: AG Grid Community 36.2.0, product options with in-place price and stock edits through the existing PATCH, publish from a row, orders grid; themed with Shelf tokens. README: live sandbox payment recorded as verified. |
 | 12 Nov 18:05 | Claude | WhatsApp channel built (ADR-012): signed webhook, queue-run Gemini agent over the same MCP tools, Pay link and Paid message, seller photo-to-draft and pricing in chat, Connect WhatsApp on the Store screen. Waiting for Meta credentials to verify live. |
 | 11 Nov 15:14 | Claude | Theme switch (Auto, Light, Dark) on the landing page, Try page and the Store screen; the choice applies before paint and reaches the Storefront through hostContext. |
