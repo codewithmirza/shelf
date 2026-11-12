@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // The WhatsApp Cloud API (Meta Graph API). The only module that talks to Meta (ADR-012).
-export const GRAPH = "https://graph.facebook.com/v23.0";
+export const GRAPH = "https://graph.facebook.com/v27.0";
 
 export interface WhatsAppDeps {
   readonly fetch: typeof fetch;
